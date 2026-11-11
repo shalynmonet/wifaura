@@ -2,6 +2,14 @@
 
 Updated November 11, 2026.
 
+Hosting update: the primary domain will be `wifaura.sha-i.com`, with
+Squarespace retaining the parent domain's DNS and all existing subdomains.
+A separate Pages project `wifaura` has been created at `wifaura.pages.dev`,
+and `wifaura.sha-i.com` is registered on it, pending the single CNAME record
+documented in `CUSTOM-DOMAIN.md`. The Worker URL below remains a fallback.
+The current `wrangler.jsonc` and default build target Pages;
+`wrangler.worker.jsonc` preserves the earlier Worker configuration.
+
 The owner authorized a public GitHub repository and Cloudflare Workers deployment.
 
 - Public repository: `https://github.com/shalynmonet/wifaura`.
@@ -29,8 +37,9 @@ No real payment or Reserve delivery has been verified. The Solidity contract
 has been tested locally. Contract deployment and a real checkout require an
 approved wallet transaction; web publishing does not authorize spending funds.
 
-The protected server key must be stored as a Cloudflare secret named
-`SUPABASE_SERVICE_ROLE_KEY` before activating wallet proofs and paid checkout.
+The protected server key must be stored in the active Pages project's encrypted
+environment settings as `SUPABASE_SECRET_KEY` (preferred) or the supported
+legacy name `SUPABASE_SERVICE_ROLE_KEY` before activating wallet proofs and paid checkout.
 It has not been retrieved or placed in public source. The contract must be
 deployed and verified, then both browser/server payment flags enabled.
 
