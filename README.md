@@ -6,7 +6,7 @@ progression. Based on NIMAURA commit `02da3cd5446ca54fabdad6890800b456ff52fb6a`.
 
 **Public complimentary release:** https://wifaura.wifaura.workers.dev
 
-Primary domain being connected: `https://wifaura.sha-i.com`, hosted on
+Primary domain: `https://wifaura.sha-i.com`, hosted on
 Cloudflare Pages at `https://wifaura.pages.dev`. Squarespace retains DNS.
 See [the single-record DNS setup](docs/CUSTOM-DOMAIN.md).
 

@@ -7,6 +7,9 @@ Squarespace retaining the parent domain's DNS and all existing subdomains.
 A separate Pages project `wifaura` has been created at `wifaura.pages.dev`,
 and `wifaura.sha-i.com` is registered on it, pending the single CNAME record
 documented in `CUSTOM-DOMAIN.md`. The Worker URL below remains a fallback.
+The owner has now saved the Squarespace CNAME; authoritative DNS, 1.1.1.1
+and 8.8.8.8 confirm `wifaura.sha-i.com -> wifaura.pages.dev`. Cloudflare
+domain verification is active; certificate activation is being checked.
 Pages production deployment `2812776a` is published; `/`, `/auth` and
 `/collective` returned HTTP 200 with the correct WIFAURA page titles.
 The current `wrangler.jsonc` and default build target Pages;
