@@ -16,8 +16,7 @@
     "contracts:compile": "node scripts/contracts.mjs",
     "contracts:test": "node scripts/test-contract.mjs",
     "deployment:check": "node --env-file=.env.local scripts/check-deployment.mjs",
-    "deploy": "npx --yes wrangler@4.160.1 deploy --config wrangler.jsonc",
-    "deploy:dry-run": "npx --yes wrangler@4.160.1 deploy --dry-run --config wrangler.jsonc"
+    "deploy": "npx --yes wrangler@4.160.1 pages deploy dist --project-name wifaura --branch main"
   },
   "overrides": {
     "rolldown": "1.2.1"

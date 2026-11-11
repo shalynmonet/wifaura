@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { AppShell } from "@/components/AppShell";
+import { authErrorMessage } from "@/lib/auth-errors";
 
 type Search = { redirect?: string | undefined };
 
@@ -35,14 +36,19 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const requestInFlight = useRef(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (requestInFlight.current) return;
+    requestInFlight.current = true;
+    setAuthError("");
     setBusy(true);
     try {
       if (mode === "up") {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: email.trim(),
           password,
           options: { emailRedirectTo: window.location.origin },
         });
@@ -50,14 +56,15 @@ function AuthPage() {
         if (!data.session) setSent(true);
         else navigate({ to: redirect ?? "/" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         navigate({ to: redirect ?? "/" });
       }
     } catch (err) {
-      toast.error((err as Error).message);
+      setAuthError(authErrorMessage(err));
     } finally {
       setBusy(false);
+      requestInFlight.current = false;
     }
   }
 
@@ -94,6 +101,14 @@ function AuthPage() {
         </p>
       ) : (
         <form onSubmit={submit} className="mt-10 space-y-3">
+          {authError && (
+            <p
+              role="alert"
+              className="rounded-sm border border-destructive/40 p-3 text-sm text-destructive"
+            >
+              {authError}
+            </p>
+          )}
           {import.meta.env["VITE_WIFAURA_GOOGLE_AUTH_ENABLED"] === "true" && (
             <>
               <button
@@ -129,6 +144,9 @@ function AuthPage() {
           <input
             className={input}
             type="email"
+            aria-label="Email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
             placeholder="Email"
             value={email}
@@ -138,6 +156,7 @@ function AuthPage() {
           <input
             className={input}
             type="password"
+            aria-label="Password"
             required
             minLength={8}
             placeholder="Password"
