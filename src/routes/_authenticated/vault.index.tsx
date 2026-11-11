@@ -10,9 +10,9 @@ export const Route = createFileRoute("/_authenticated/vault/")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "My Vault — NIMAURA" },
+      { title: "My Vault — WIFAURA" },
       { name: "description", content: "Your private collection of unsealed manifestations." },
-      { property: "og:title", content: "My Vault — NIMAURA" },
+      { property: "og:title", content: "My Vault — WIFAURA" },
       { property: "og:description", content: "Your private collection of unsealed manifestations." },
     ],
   }),

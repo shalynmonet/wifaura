@@ -10,9 +10,9 @@ export const Route = createFileRoute("/")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "NIMAURA — Today's sealed artifact" },
+      { title: "WIFAURA — Today's sealed artifact" },
       { name: "description", content: "A new mysterious entity waits to be unsealed every 24 hours. Choose an intention. Save for the future." },
-      { property: "og:title", content: "NIMAURA — Unseal the unseen" },
+      { property: "og:title", content: "WIFAURA — Unseal the unseen" },
       { property: "og:description", content: "A daily generative-art unsealing ritual that saves for your future." },
     ],
   }),

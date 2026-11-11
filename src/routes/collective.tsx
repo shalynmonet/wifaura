@@ -8,9 +8,9 @@ import { collectiveProgress, collectiveQuery } from "@/lib/collective";
 export const Route = createFileRoute("/collective")({
   head: () => ({
     meta: [
-      { title: "The Collective Seal — NIMAURA" },
+      { title: "The Collective Seal — WIFAURA" },
       { name: "description", content: "Every completed unsealing joins one shared mystery. Watch collective entities awaken at community milestones." },
-      { property: "og:title", content: "The Collective Seal — NIMAURA" },
+      { property: "og:title", content: "The Collective Seal — WIFAURA" },
       { property: "og:description", content: "One mystery. Thousands of intentions." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

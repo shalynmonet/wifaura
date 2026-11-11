@@ -17,9 +17,9 @@ export const Route = createFileRoute("/_authenticated/vault/$id")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Encounter — NIMAURA" },
+      { title: "Encounter — WIFAURA" },
       { name: "description", content: "A private encounter with an unsealed entity." },
-      { property: "og:title", content: "Encounter — NIMAURA" },
+      { property: "og:title", content: "Encounter — WIFAURA" },
       { property: "og:description", content: "A private encounter with an unsealed entity." },
     ],
   }),

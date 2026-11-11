@@ -27,9 +27,9 @@ export function collectiveProgress(state: CollectiveState) {
 
 export const collectiveQuery = () =>
   queryOptions({
-    queryKey: ["collective", "nimiq"],
+    queryKey: ["collective", "wifaura"],
     queryFn: async (): Promise<CollectiveState> => {
-      const { data, error } = await supabase.rpc("collective_state", { _deployment: "nimiq" });
+      const { data, error } = await supabase.rpc("collective_state", { _deployment: "wifaura" });
       if (error) throw error;
       return data as unknown as CollectiveState;
     },

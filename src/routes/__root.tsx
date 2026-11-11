@@ -14,6 +14,9 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { assertSeparateBackend } from '@/lib/wif/isolation';
+
+assertSeparateBackend(import.meta.env['VITE_SUPABASE_URL']);
 
 function NotFoundComponent() {
   return (
@@ -67,8 +70,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0b0a08" },
-      { title: "NIMAURA — Unseal the unseen" },
-      { name: "description", content: "A daily generative-art unsealing ritual that saves for your future. A Nimiq Mini App." },
+      { title: "WIFAURA — Unseal the unseen" },
+      { name: "description", content: "A daily generative-art unsealing ritual that saves for your future. A Robinhood Chain experience." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

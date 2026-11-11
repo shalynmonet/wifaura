@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+
 import { AppShell } from "@/components/AppShell";
 
 type Search = { redirect?: string | undefined };
@@ -16,9 +16,9 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Enter NIMAURA — Collector sign in" },
+      { title: "Enter WIFAURA — Collector sign in" },
       { name: "description", content: "Sign in to keep your private Vault and Reserve." },
-      { property: "og:title", content: "Enter NIMAURA" },
+      { property: "og:title", content: "Enter WIFAURA" },
       { property: "og:description", content: "Sign in to keep your private Vault and Reserve." },
     ],
   }),
@@ -56,13 +56,13 @@ function AuthPage() {
   }
 
   async function google() {
-    if (redirect) sessionStorage.setItem("nimaura_redirect", redirect);
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (redirect) sessionStorage.setItem("wifaura_redirect", redirect);
+    const r = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
     if (r.error) {
       toast.error(r.error.message ?? "Google sign-in failed");
       return;
     }
-    if (r.redirected) return;
+    if (r.data.url) return;
     navigate({ to: redirect ?? "/" });
   }
 

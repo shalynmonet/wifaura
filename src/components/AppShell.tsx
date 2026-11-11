@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="grain min-h-dvh bg-void text-foreground">
       <header className="mx-auto flex max-w-md items-center justify-between px-6 pt-6">
-        <Link to="/" className="font-display text-xl tracking-[0.4em] text-ivory">NIMAURA</Link>
+        <Link to="/" className="font-display text-xl tracking-[0.4em] text-ivory">WIFAURA</Link>
         <span className="eyebrow text-[0.6rem] text-muted-foreground">Cycle III</span>
       </header>
       <div

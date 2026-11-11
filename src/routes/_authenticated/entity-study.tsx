@@ -9,9 +9,9 @@ const Scene = lazy(() => import("@/components/SeraphStudyScene"));
 export const Route = createFileRoute("/_authenticated/entity-study")({
   ssr: false,
   head: () => ({ meta: [
-    { title: "Three presences · Entity studies — NIMAURA" },
+    { title: "Three presences · Entity studies — WIFAURA" },
     { name: "description", content: "Private motion studies of the Woven Seraph, Parallax Choir and Foldkeeper across four paths." },
-    { property: "og:title", content: "Three presences · Entity studies — NIMAURA" },
+    { property: "og:title", content: "Three presences · Entity studies — WIFAURA" },
     { property: "og:description", content: "Three distinct woven presences from a proposed finite collection of seven." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
     { name: "robots", content: "noindex, nofollow" },
@@ -30,7 +30,7 @@ function EntityStudy() {
   return <main className="min-h-screen bg-void text-foreground">
     <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
       <Button asChild variant="ghost" size="sm"><Link to="/art-study"><ArrowLeft /> Studies</Link></Button>
-      <span className="text-xs text-muted-foreground">NIMAURA · Collection study</span>
+      <span className="text-xs text-muted-foreground">WIFAURA · Collection study</span>
     </header>
     <nav aria-label="Study entity" className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2 px-3">
       {ENTITY_LINEUP.slice(0, 3).map(e => <Button key={e.id} size="sm" variant={identity === e.id ? "secondary" : "ghost"} aria-pressed={identity === e.id} onClick={() => setIdentity(e.id as StudyIdentity)}>{e.name.replace("The ", "")}</Button>)}

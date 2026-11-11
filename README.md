@@ -1,24 +1,32 @@
-# Nimaura
+# WIFAURA
 
-Implement exactly the screenshot and nothing else
+A separate Robinhood Chain edition of NIMAURA: daily generative art, verified
+WIF checkout, an atomic 50% Reserve transfer and independent Collective Seal
+progression. Based on NIMAURA commit `02da3cd5446ca54fabdad6890800b456ff52fb6a`.
 
-This project was built with [Lovable](https://lovable.dev).
+**Deployment in progress.** Payments default off. WIFAURA must use a new backend
+and new deployment. Never connect it to the
+original NIMAURA project.
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/af4b1545-b6d9-4f28-abbd-1e1fabd43ebe).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Public source: https://github.com/shalynmonet/wifaura
+See [current deployment status](docs/DEPLOYMENT-STATUS.md) for live-service readiness.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+npm ci
+npm run typecheck
+npm test
+npm run contracts:test
+npm run build
 ```
+
+Configure a separate backend using `.env.example` before running `npm run dev`.
+
+- [Deployment, official requirements and architecture](docs/WIFAURA-DEPLOYMENT.md)
+- [Validation evidence and remaining acceptance steps](docs/VALIDATION.md)
+- [Hackathon submission and demo draft](docs/HACKATHON-SUBMISSION.md)
+- [Payment contract](contracts/WifauraPayments.sol)
+- [New backend schema](database/wifaura.sql)
+
+No remote creation, deployment, real transaction or submission is authorized by
+running local tests. Obtain the owner's approval for each external change.
+The original MIT attribution is retained in `LICENSE`.

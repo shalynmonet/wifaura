@@ -7,9 +7,9 @@ const Study = lazy(() => import("@/components/SeraphStudyScene"));
 export const Route = createFileRoute("/_authenticated/art-study")({
   ssr: false,
   head: () => ({ meta: [
-    { title: "The Woven Seraph · Sculptural study — NIMAURA" },
+    { title: "The Woven Seraph · Sculptural study — WIFAURA" },
     { name: "description", content: "A private, experimental living Seraph study. Existing collectibles remain unchanged." },
-    { property: "og:title", content: "The Woven Seraph · Sculptural study — NIMAURA" },
+    { property: "og:title", content: "The Woven Seraph · Sculptural study — WIFAURA" },
     { property: "og:description", content: "An experimental woven sculpture and living encounter." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -22,7 +22,7 @@ function ArtStudy() {
   return <main className="min-h-screen bg-void text-foreground">
     <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
       <Button asChild variant="ghost" size="sm"><Link to="/vault"><ArrowLeft /> Vault</Link></Button>
-      <span className="text-xs uppercase text-muted-foreground">NIMAURA · Study 03</span>
+      <span className="text-xs uppercase text-muted-foreground">WIFAURA · Study 03</span>
       <Button asChild variant="ghost" size="sm"><Link to="/entity-study">Entity studies</Link></Button>
     </header>
     <div className="text-center">

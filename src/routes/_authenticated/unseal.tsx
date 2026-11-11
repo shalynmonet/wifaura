@@ -7,7 +7,7 @@ import { AppShell, Countdown } from "@/components/AppShell";
 import { Seal } from "@/components/Seal";
 import { currentDropQuery, profileQuery } from "@/lib/queries";
 import { newManifestationSnapshot, INTENTIONS, INTENTION_COPY, newSeed, type Intention } from "@/lib/manifest";
-import { PaymentPanel } from "@/components/PaymentPanel";
+import { WifPaymentPanel as PaymentPanel } from "@/components/WifPaymentPanel";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/unseal")({
@@ -15,9 +15,9 @@ export const Route = createFileRoute("/_authenticated/unseal")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Resonance — NIMAURA" },
+      { title: "Resonance — WIFAURA" },
       { name: "description", content: "Choose the intention that shapes how today's entity manifests." },
-      { property: "og:title", content: "Resonance — NIMAURA" },
+      { property: "og:title", content: "Resonance — WIFAURA" },
       { property: "og:description", content: "Choose the intention that shapes how today's entity manifests." },
     ],
   }),
