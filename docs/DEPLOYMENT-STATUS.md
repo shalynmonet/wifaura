@@ -26,10 +26,12 @@ The owner authorized a public GitHub repository and Cloudflare Workers deploymen
 - Earlier Cloudflare Worker configuration is preserved in `wrangler.worker.jsonc`. Daily
   artifact, seven locked Collective milestones and private-page sign-in
   redirects were verified in a browser.
-- Email sign-in is the launch method; Google is hidden until configured.
+- Google provider is enabled, verified through public Auth settings. Its
+  authorization endpoint returns a 302 to accounts.google.com with the correct
+  Supabase callback. The Google button is enabled in the production build.
 - Supabase Site URL and Redirect URLs previously used the Worker origin;
   the owner must now update them to the custom domain. A real signup or
-  Google sign-in has not been exercised here.
+  Google sign-in through account selection and return has not been exercised here.
 - Earlier Worker revision: `68c22bb18573bcf8b4d6a5a965efb453ed218962`.
 - Earlier Worker version: `e3b5f215-39eb-4ed5-a392-545fa0db1f2f`.
 - Payments: disabled pending deployed, verified payment contract and backend.
