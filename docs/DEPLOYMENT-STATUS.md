@@ -14,8 +14,10 @@ The owner authorized a public GitHub repository and Cloudflare Workers deploymen
   artifact, seven locked Collective milestones and private-page sign-in
   redirects were verified in a browser.
 - Email sign-in is the launch method; Google is hidden until configured.
-- Owner action pending: set Supabase Site URL and Redirect URLs to the public
-  app origin, then verify a real signup/confirmation/sign-in.
+- Owner confirmed Supabase Site URL and Redirect URLs saved to the public
+  app origin. A real signup/confirmation/sign-in has not been exercised here.
+- Published code revision: `68c22bb18573bcf8b4d6a5a965efb453ed218962`.
+- Cloudflare version: `e3b5f215-39eb-4ed5-a392-545fa0db1f2f`.
 - Payments: disabled pending deployed, verified payment contract and backend.
 - Complimentary launch: wallet linking and paid controls are visibly disabled.
   The protected server key and verified contract must be configured before
