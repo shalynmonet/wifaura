@@ -6,6 +6,20 @@ import { connectWifWallet, signWifMessage } from "@/lib/wif/wallet";
 import { Button } from "@/components/ui/button";
 
 export function WalletPanel() {
+  if (import.meta.env["VITE_WIFAURA_PAYMENTS_ENABLED"] === "false")
+    return (
+      <section className="mt-6 space-y-3 rounded-sm border p-4">
+        <h2 className="eyebrow">WIF wallets</h2>
+        <p className="text-sm text-muted-foreground">
+          WIF payments and Reserve linking are not open yet. Enjoy your complimentary unsealings
+          while checkout is being prepared.
+        </p>
+      </section>
+    );
+  return <ActiveWalletPanel />;
+}
+
+function ActiveWalletPanel() {
   const account = useServerFn(wifAccount),
     challenge = useServerFn(walletChallenge),
     link = useServerFn(linkWallet);

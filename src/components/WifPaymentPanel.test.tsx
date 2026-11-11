@@ -34,12 +34,20 @@ const q = {
   manifestation_id: null,
 };
 beforeEach(() => {
+  vi.stubEnv('VITE_WIFAURA_PAYMENTS_ENABLED', 'true');
   vi.resetAllMocks();
   m.account.mockResolvedValue({ quotes: [q], links: [] });
   m.prepare.mockResolvedValue({ ...q, status: "pending" });
   m.pay.mockResolvedValue("0x" + "b".repeat(64));
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+it('does not open a wallet or request payment state while paid checkout is disabled', () => {
+  vi.stubEnv('VITE_WIFAURA_PAYMENTS_ENABLED', 'false');
+  render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
+  expect(screen.getByText(/Paid unsealings are not open yet/)).toBeTruthy();
+  expect(m.account).not.toHaveBeenCalled();
+  expect(m.pay).not.toHaveBeenCalled();
+});
 it("opens only one wallet payment when clicked twice", async () => {
   render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
   const button = await screen.findByText("2. Pay and unseal");

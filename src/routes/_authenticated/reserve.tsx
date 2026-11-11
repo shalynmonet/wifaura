@@ -11,10 +11,16 @@ export const Route = createFileRoute("/_authenticated/reserve")({
 });
 function Reserve() {
   const account = useServerFn(wifAccount);
-  const q = useQuery({ queryKey: ["wif-account"], queryFn: () => account() });
+  const available = import.meta.env["VITE_WIFAURA_PAYMENTS_ENABLED"] !== "false";
+  const q = useQuery({ queryKey: ["wif-account"], queryFn: () => account(), enabled: available });
   return (
     <AppShell>
       <h1 className="mt-6 font-display text-4xl">My Reserve</h1>
+      {!available && (
+        <p className="mt-4 text-muted-foreground">
+          WIF payments and Reserve delivery are not open yet.
+        </p>
+      )}
       <p className="mt-4 text-sm text-muted-foreground">
         Each verified WIF payment sends 50% directly to its snapshotted Reserve address. This is
         payment history, not your current wallet balance or an investment return. Showing the latest

@@ -8,7 +8,7 @@ copy. Original NIMAURA remote history and hosted data have not been changed.
 | Check | Result |
 | --- | --- |
 | Full test suite | 25 files, 208 tests passed |
-| After $1 pricing change | 15 targeted pricing, database, receipt and UI tests passed |
+| Deployment checks | 16 targeted pricing, database, receipt and UI tests passed |
 | TypeScript | `npm run typecheck` passed |
 | Production build | Client and Cloudflare worker passed; worker named `wifaura` |
 | Solidity/EVM execution | `npm run contracts:test` passed |

@@ -13,7 +13,24 @@ import { approveWif, payWif } from "@/lib/wif/wallet";
 import { type WifQuote } from "@/lib/wif/config";
 import type { Intention } from "@/lib/manifest";
 
-export function WifPaymentPanel({
+export function WifPaymentPanel(props: {
+  dropId: string;
+  intention: Intention | null;
+  onFulfilled: (id: string) => void;
+}) {
+  if (import.meta.env["VITE_WIFAURA_PAYMENTS_ENABLED"] === "false")
+    return (
+      <section className="space-y-3 rounded-sm border p-4">
+        <p className="eyebrow">Unseal with $WIF</p>
+        <p className="text-sm text-muted-foreground">
+          Paid unsealings are not open yet. Your Vault and Collective progress remain available.
+        </p>
+      </section>
+    );
+  return <ActiveWifPaymentPanel {...props} />;
+}
+
+function ActiveWifPaymentPanel({
   dropId,
   intention,
   onFulfilled,
