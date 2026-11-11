@@ -44,4 +44,15 @@ if (process.argv[1]?.endsWith("contracts.mjs")) {
     ),
   );
   console.log("Compiled WifauraPayments. No deployment or transaction sent.");
+  writeFileSync(
+    "src/lib/wif/deployment-artifact.json",
+    JSON.stringify(
+      {
+        abi: contract.abi,
+        bytecode: `0x${contract.evm.bytecode.object}`,
+      },
+      null,
+      2,
+    ),
+  );
 }

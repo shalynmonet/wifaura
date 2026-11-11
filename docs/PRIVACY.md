@@ -18,7 +18,7 @@ We use information to authenticate accounts, maintain collectibles and progressi
 
 ## Providers and disclosure
 
-WIFAURA uses Supabase for authentication and database services, Cloudflare for hosting and delivery, and Google when you choose Google sign-in. These providers process information under their own policies and applicable service arrangements. When enabled, blockchain RPC and pricing providers receive the public addresses or market requests needed for payment verification and quotes. We do not sell your personal information or use Google account information for advertising.
+WIFAURA uses Supabase for authentication and database services, Cloudflare for hosting and delivery, and Google when you choose Google sign-in. These providers process information under their own policies and applicable service arrangements. When enabled, blockchain RPC and pricing providers receive the public addresses or market requests needed for payment verification and quotes. We do not sell your personal information or use Google account information for advertising. When you choose WalletConnect, WalletConnect/Reown provides wallet discovery and connection relay services. Its services may process your public wallet address, connection metadata, and technical information. Wallet sessions are stored in your browser so you can reconnect.
 
 Blockchain transactions and addresses are public. If you transact, the resulting records can be viewed by others and generally cannot be erased from the blockchain. Your Google email is not intentionally written to the blockchain by WIFAURA.
 

@@ -2,6 +2,18 @@
 
 Updated November 11, 2026.
 
+Owner setup is published at `/deploy-payment`: a WalletConnect QR pairing flow
+for Robinhood Wallet, followed by a read-only gas estimate and a separate
+explicit deployment consent. Build, type checks and five wallet unit tests
+passed. No contract deployment or real transaction has been performed. Actual
+phone pairing is still required. See `CONTRACT-SETUP.md`.
+
+The owner saved `SUPABASE_SECRET_KEY` as a secret on the earlier Worker.
+The live custom-domain Pages project still needs its own Production secret.
+These are separate Cloudflare targets despite both being named wifaura:
+`/workers/services/view/wifaura/production/settings` is the fallback;
+`/pages/view/wifaura/settings/production` is the active Pages project.
+
 The owner-approved privacy policy is available at `/privacy`, linked from the
 shared application footer. Google Branding should use the primary homepage
 and `https://wifaura.sha-i.com/privacy`; Google production publishing remains

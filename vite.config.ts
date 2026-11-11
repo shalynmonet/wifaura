@@ -8,9 +8,18 @@
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
-  nitro: { preset: process.env['NITRO_PRESET'] || 'cloudflare_pages' },
+  nitro: {
+    preset: process.env['NITRO_PRESET'] || 'cloudflare_pages',
+    // Nitro shares these aliases with the client build. Its node-compat
+    // preset otherwise replaces events with an unavailable browser builtin.
+    alias: {
+      events: fileURLToPath(new URL("./node_modules/events/events.js", import.meta.url)),
+      "node:events": fileURLToPath(new URL("./node_modules/events/events.js", import.meta.url)),
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

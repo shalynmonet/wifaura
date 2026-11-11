@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CollectiveRouteImport } from './routes/collective'
+import { Route as DeployPaymentRouteImport } from './routes/deploy-payment'
 import { Route as HubReturnRouteImport } from './routes/hub-return'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
@@ -40,6 +41,11 @@ const AuthRoute = AuthRouteImport.update({
 const CollectiveRoute = CollectiveRouteImport.update({
   id: '/collective',
   path: '/collective',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeployPaymentRoute = DeployPaymentRouteImport.update({
+  id: '/deploy-payment',
+  path: '/deploy-payment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HubReturnRoute = HubReturnRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/collective': typeof CollectiveRoute
+  '/deploy-payment': typeof DeployPaymentRoute
   '/hub-return': typeof HubReturnRoute
   '/privacy': typeof PrivacyRoute
   '/account': typeof AuthenticatedAccountRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/collective': typeof CollectiveRoute
+  '/deploy-payment': typeof DeployPaymentRoute
   '/hub-return': typeof HubReturnRoute
   '/privacy': typeof PrivacyRoute
   '/account': typeof AuthenticatedAccountRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/collective': typeof CollectiveRoute
+  '/deploy-payment': typeof DeployPaymentRoute
   '/hub-return': typeof HubReturnRoute
   '/privacy': typeof PrivacyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/collective'
+    | '/deploy-payment'
     | '/hub-return'
     | '/privacy'
     | '/account'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/collective'
+    | '/deploy-payment'
     | '/hub-return'
     | '/privacy'
     | '/account'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/collective'
+    | '/deploy-payment'
     | '/hub-return'
     | '/privacy'
     | '/_authenticated/account'
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CollectiveRoute: typeof CollectiveRoute
+  DeployPaymentRoute: typeof DeployPaymentRoute
   HubReturnRoute: typeof HubReturnRoute
   PrivacyRoute: typeof PrivacyRoute
 }
@@ -216,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/collective'
       fullPath: '/collective'
       preLoaderRoute: typeof CollectiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deploy-payment': {
+      id: '/deploy-payment'
+      path: '/deploy-payment'
+      fullPath: '/deploy-payment'
+      preLoaderRoute: typeof DeployPaymentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hub-return': {
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CollectiveRoute: CollectiveRoute,
+  DeployPaymentRoute: DeployPaymentRoute,
   HubReturnRoute: HubReturnRoute,
   PrivacyRoute: PrivacyRoute,
 }
