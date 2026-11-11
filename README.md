@@ -4,9 +4,11 @@ A separate Robinhood Chain edition of NIMAURA: daily generative art, verified
 WIF checkout, an atomic 50% Reserve transfer and independent Collective Seal
 progression. Based on NIMAURA commit `02da3cd5446ca54fabdad6890800b456ff52fb6a`.
 
-**Deployment in progress.** Payments default off. WIFAURA must use a new backend
-and new deployment. Never connect it to the
-original NIMAURA project.
+**Public complimentary release:** https://wifaura.wifaura.workers.dev
+
+WIF payments remain off until the verified contract and protected server key
+are configured. WIFAURA uses a separate backend and deployment; never connect
+it to the original NIMAURA project.
 
 Public source: https://github.com/shalynmonet/wifaura
 See [current deployment status](docs/DEPLOYMENT-STATUS.md) for live-service readiness.

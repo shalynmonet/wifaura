@@ -13,6 +13,7 @@
     "SUPABASE_URL": "https://bvnjosopyjblugshdbwd.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_BS4YS2kw6x_ebMJe755wjg_iXY6JCZD",
     "WIFAURA_PAYMENTS_ENABLED": "false",
+    "WIFAURA_ORIGIN": "https://wifaura.wifaura.workers.dev",
     "WIFAURA_RPC_URL": "https://rpc.mainnet.chain.robinhood.com",
     "WIFAURA_TREASURY": "0x1fbe8ca7ab3bb424520972b6e27c0130f4971985",
   },
