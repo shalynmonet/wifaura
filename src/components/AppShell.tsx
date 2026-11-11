@@ -21,7 +21,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="mx-auto mt-5 h-5 max-w-md border-y border-gold/25 bg-repeat opacity-75"
         style={{ backgroundImage: `url(${headerWeave.url})`, backgroundSize: "40px 40px" }}
       />
-      <main className="mx-auto max-w-md px-6 pb-28">{children}</main>
+      <main className="mx-auto max-w-md px-6 pb-28">
+        {children}
+        <footer className="mt-12 border-t border-border/60 pt-5 text-center text-xs text-muted-foreground">
+          <Link to="/privacy" className="underline underline-offset-4 hover:text-ivory">Privacy Policy</Link>
+        </footer>
+      </main>
       <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/90 backdrop-blur">
         <ul className="mx-auto flex max-w-md justify-around py-3">
           {NAV.map((n) => (

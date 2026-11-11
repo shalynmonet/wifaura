@@ -2,6 +2,11 @@
 
 Updated November 11, 2026.
 
+The owner-approved privacy policy is available at `/privacy`, linked from the
+shared application footer. Google Branding should use the primary homepage
+and `https://wifaura.sha-i.com/privacy`; Google production publishing remains
+an owner-controlled console step.
+
 Hosting update: the primary domain will be `wifaura.sha-i.com`, with
 Squarespace retaining the parent domain's DNS and all existing subdomains.
 A separate Pages project `wifaura` has been created at `wifaura.pages.dev`,

@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CollectiveRouteImport } from './routes/collective'
 import { Route as HubReturnRouteImport } from './routes/hub-return'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedArtStudyRouteImport } from './routes/_authenticated/art-study'
 import { Route as AuthenticatedEntityStudyRouteImport } from './routes/_authenticated/entity-study'
@@ -44,6 +45,11 @@ const CollectiveRoute = CollectiveRouteImport.update({
 const HubReturnRoute = HubReturnRouteImport.update({
   id: '/hub-return',
   path: '/hub-return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/collective': typeof CollectiveRoute
   '/hub-return': typeof HubReturnRoute
+  '/privacy': typeof PrivacyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/art-study': typeof AuthenticatedArtStudyRoute
   '/entity-study': typeof AuthenticatedEntityStudyRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/collective': typeof CollectiveRoute
   '/hub-return': typeof HubReturnRoute
+  '/privacy': typeof PrivacyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/art-study': typeof AuthenticatedArtStudyRoute
   '/entity-study': typeof AuthenticatedEntityStudyRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/collective': typeof CollectiveRoute
   '/hub-return': typeof HubReturnRoute
+  '/privacy': typeof PrivacyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/art-study': typeof AuthenticatedArtStudyRoute
   '/_authenticated/entity-study': typeof AuthenticatedEntityStudyRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/collective'
     | '/hub-return'
+    | '/privacy'
     | '/account'
     | '/art-study'
     | '/entity-study'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/collective'
     | '/hub-return'
+    | '/privacy'
     | '/account'
     | '/art-study'
     | '/entity-study'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/collective'
     | '/hub-return'
+    | '/privacy'
     | '/_authenticated/account'
     | '/_authenticated/art-study'
     | '/_authenticated/entity-study'
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CollectiveRoute: typeof CollectiveRoute
   HubReturnRoute: typeof HubReturnRoute
+  PrivacyRoute: typeof PrivacyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -210,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/hub-return'
       fullPath: '/hub-return'
       preLoaderRoute: typeof HubReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account': {
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CollectiveRoute: CollectiveRoute,
   HubReturnRoute: HubReturnRoute,
+  PrivacyRoute: PrivacyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
