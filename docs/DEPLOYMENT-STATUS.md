@@ -27,8 +27,10 @@ https://wifaura.wifaura.workers.dev deployment remains a fallback.
 
 Independent checks match the compiled runtime after immutable masking and
 verify the chain, token, treasury and decimals. Public evidence is recorded in
-deployments/robinhood-mainnet.json. The last recorded finalized checkpoint,
-112207071, was below the deployment block; finality must be rechecked.
+deployments/robinhood-mainnet.json. The canonical deployment receipt is now
+covered by finalized checkpoint 112218125, and its current immutable runtime
+still matches the pinned hash. The public RPC lacks historical finalized
+state; receipt/block finality verification does not depend on that state query.
 
 Real Robinhood Wallet signing and the factory deployment succeeded. Recovery
 uses one SDK client and a pinned sender nonce. The factory's exact runtime is
@@ -41,7 +43,7 @@ Two standard Ethereum accounts in a new MetaMask wallet are the planned test
 setup. The owner creates and backs them up; the app verifies ownership through
 signatures. No private key or recovery phrase is requested by the agent.
 
-Confirm finality, verify the wallet links and backend access, review funding
+Verify the wallet links and backend access, review funding
 and WIF acquisition, then approve one real $1-equivalent WIF checkout. Check
 finalized payment evidence, both equal transfers, exactly one artifact,
 Reserve delivery and independent Collective progress. Repeating verification

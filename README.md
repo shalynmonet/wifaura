@@ -12,7 +12,7 @@ See [the single-record DNS setup](docs/CUSTOM-DOMAIN.md).
 
 The payment contract is deployed and source-verified; its runtime hash and
 protected server key are configured. Wallet setup is open. Paid checkout
-remains off pending finality and real-payment acceptance testing.
+remains off pending real-payment acceptance testing; deployment is finalized.
 WIFAURA uses a separate backend and deployment; never connect
 it to the original NIMAURA project.
 

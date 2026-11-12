@@ -11,9 +11,11 @@
   "status": "success",
   "gasUsed": "618367",
   "gasPaidEth": "0.000012372286936",
-  "lastFinalizedBlock": "112207071",
-  "finalized": false,
+  "lastFinalizedBlock": "112218125",
+  "finalized": true,
   "sourceVerified": true,
   "paymentsEnabled": false,
-  "realCheckoutVerified": false
+  "realCheckoutVerified": false,
+  "canonicalReceiptVerified": true,
+  "finalityVerification": "Canonical receipt block hash, finalized checkpoint covers inclusion, current immutable runtime matches pinned source. Public RPC does not provide historical finalized state."
 }
