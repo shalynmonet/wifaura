@@ -36,6 +36,46 @@ it("rejects a different phone payer before asking the wallet to send", async () 
   await expect(payWif(checkout)).rejects.toThrow(`This quote requires payer ${checkout.sender}`);
   expect(request.mock.calls.some(([call]) => call.method === "eth_sendTransaction")).toBe(false);
 });
+it("keeps approval and payment on the authorized chain after mobile app default-network changes", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const { getWifProvider, approveWif, payWif } = await import("./wallet");
+  await getWifProvider(true);
+  const provider = await mock.init.mock.results[0]!.value;
+  let current = 1;
+  provider.setDefaultChain.mockImplementation((chain: string) => {
+    current = Number(chain.split(":")[1]);
+  });
+  mock.request.mockImplementation(async ({ method }: { method: string }) => {
+    if (method === "eth_chainId") return current;
+    if (method === "eth_accounts") return [checkout.sender];
+    if (method === "eth_sendTransaction") return `0x${"b".repeat(64)}`;
+    throw new Error(`Unexpected ${method}`);
+  });
+  await approveWif(checkout);
+  current = 1; // The app foreground event resets the provider's UI/default chain.
+  await payWif(checkout);
+  expect(mock.request.mock.calls.every(([, chain]) => chain === "eip155:4663")).toBe(true);
+  expect(
+    mock.request.mock.calls.filter(([args]) => args.method === "eth_sendTransaction"),
+  ).toHaveLength(2);
+  const pay = mock.request.mock.calls.find(
+    ([args]) =>
+      args.method === "eth_sendTransaction" && args.params[0].to.toLowerCase() === checkout.router,
+  );
+  expect(pay).toBeTruthy();
+  expect(decodeFunctionData({ abi: paymentAbi, data: pay![0].params[0].data }).functionName).toBe(
+    "pay",
+  );
+});
+it("refuses payment if the wallet session revokes the required chain", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const { getWifProvider, payWif } = await import("./wallet");
+  await getWifProvider(true);
+  const provider = await mock.init.mock.results[0]!.value;
+  provider.session.namespaces.eip155.accounts = [`eip155:1:${checkout.sender}`];
+  await expect(payWif(checkout)).rejects.toThrow("authorization changed");
+  expect(mock.request).not.toHaveBeenCalled();
+});
 it("sends only the quoted payment and never retries a rejected transaction", async () => {
   let transaction: { to: string; data: `0x${string}` } | undefined;
   const request = vi.fn(async ({ method, params }: { method: string; params?: unknown[] }) => {

@@ -8,6 +8,7 @@ import {
 } from "viem";
 import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
 import { mobileWalletRequest } from "./mobile-wallet";
+import { setupRobinhoodNetwork } from "./network-setup";
 
 async function createWalletConnect() {
   const projectId = import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"];
@@ -114,7 +115,24 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
     provider.setDefaultChain(`eip155:${robinhood.id}`, robinhood.rpcUrls.default.http[0]);
     selectedProvider = {
       request: (args) => {
-        const send = () => provider.request(args as Parameters<typeof provider.request>[0]);
+        // Wallet apps can change the SDK's local default when foregrounded.
+        // Route each request to the explicitly authorized WIFAURA namespace,
+        // rather than inheriting the wallet's unrelated UI/default network.
+        const authorized = Object.values(provider.session?.namespaces ?? {}).some((namespace) =>
+          namespace.accounts.some((account) => account.startsWith(`eip155:${robinhood.id}:`)),
+        );
+        if (!authorized)
+          return Promise.reject(
+            new Error(
+              "Robinhood Chain authorization changed. Reconnect your paying wallet before continuing.",
+            ),
+          );
+        provider.setDefaultChain(`eip155:${robinhood.id}`, robinhood.rpcUrls.default.http[0]);
+        const send = () =>
+          provider.request(
+            args as Parameters<typeof provider.request>[0],
+            `eip155:${robinhood.id}`,
+          );
         return args.method === "personal_sign" || args.method === "eth_sendTransaction"
           ? mobileWalletRequest(
               send,
@@ -234,6 +252,10 @@ export async function signWifMessage(message: string, address: `0x${string}`) {
   return client.signMessage({ account: address, message });
 }
 async function checkedWallet(q: WifQuote) {
+  const provider = await getWifProvider();
+  // An injected wallet needs a real, user-approved network switch. This never
+  // invents an authorization or sends a transaction.
+  await setupRobinhoodNetwork(provider);
   const client = await wallet();
   const [address] = await client.getAddresses();
   if ((await client.getChainId()) !== robinhood.id)
