@@ -2,118 +2,59 @@
 
 Updated November 11, 2026.
 
-Signing now passed on the owner's real Robinhood Wallet. Direct contract
-creation still produced no wallet prompt; the latest read-only check showed
-zero confirmed/pending outgoing transactions and no direct contract code.
-The setup page now uses the code-pinned canonical deterministic deployment
-proxy as a normal zero-value contract call. Local EVM tests, type checks,
-build and mainnet gas simulation passed. Expected payment contract:
-`0x2d889Ff462B21177A4C2E6384D258eC867222D69`. Actual factory-call approval,
-deployment, independent source verification and real checkout remain pending.
+WIFAURA is live at https://wifaura.sha-i.com on Cloudflare Pages. Public source:
+https://github.com/shalynmonet/wifaura. Google sign-in works, confirmed by the
+owner. Its separate SHA-I backend is bvnjosopyjblugshdbwd. The protected server
+key is configured as an encrypted Pages Production secret; its value has not
+been retrieved or placed in source. Wallet linking is open. Both paid-checkout
+flags remain false. Latest wallet-setup deployment: bed88e93.
 
-Official rules/schedule rechecked at https://worldisflat.fun/build/rules:
-entry is free, and buying/holding tokens is not an entry requirement. ETH
-funding is for deployment gas. Submission deadline is November 12, 2026,
-17:30 UTC (11:30 a.m. Chicago); final closes November 16 at the same time.
+Squarespace retains its original nameservers; only the wifaura CNAME points
+to Pages. NIMAURA's repository and backend remain unchanged. The earlier
+https://wifaura.wifaura.workers.dev deployment remains a fallback.
 
-Owner setup is published at `/deploy-payment`: a WalletConnect QR pairing flow
-for Robinhood Wallet, followed by a read-only gas estimate and a separate
-explicit deployment consent. Phone pairing and gas estimation succeeded;
-contract deployment and a real WIF checkout remain unverified. See
-`CONTRACT-SETUP.md`.
+## Verified payment contract
 
-The owner saved `SUPABASE_SECRET_KEY` as an encrypted Production secret on
-the live custom-domain Pages project; verified through the Cloudflare API.
-The same name also exists on the earlier Worker.
-These are separate Cloudflare targets despite both being named wifaura:
-`/workers/services/view/wifaura/production/settings` is the fallback;
-`/pages/view/wifaura/settings/production` is the active Pages project.
+- Robinhood Chain mainnet: 4663, ETH gas.
+- Contract: 0x2d889Ff462B21177A4C2E6384D258eC867222D69
+- WIF token: 0x5173b8eA6923c2d40267890D45C46a3480954773, 18 decimals.
+- Treasury: 0x1fbe8ca7ab3bb424520972b6e27c0130f4971985
+- Runtime hash: 0x4bdfd605b0c3ba7414344ccdb5290cde5e0862eb570ace6e43edd5f7821419b4
+- Deployment: 0xd1da54769d0b7deb6bd60923a28997c2e791f292c9d7e1f1ae1379ce61725a9d
+- Included block: 112209872.
+- Actual gas paid: 0.000012372286936 ETH.
+- Blockscout source verification: owner approved; returned Pass - Verified.
 
-Real Robinhood Wallet QR pairing and gas estimation succeeded. The owner
-funded its address on chain 4663 with 0.0024 ETH. The first deployment request
-became stuck without a wallet prompt, then the owner refreshed. At the last
-read-only check, confirmed and pending outgoing counts were both zero.
-Recovery now checks for an existing contract/nonce, closes the old session,
-and retains the original nonce for any separately approved retry. A 12-second
-wallet ping precedes the single send request. Ten targeted tests, type checks,
-and production builds passed. Contract deployment remains unverified.
+Independent checks match the compiled runtime after immutable masking and
+verify the chain, token, treasury and decimals. Public evidence is recorded in
+deployments/robinhood-mainnet.json. The last recorded finalized checkpoint,
+112207071, was below the deployment block; finality must be rechecked.
 
-The next wallet ping timed out before sending a transaction. The root cause is
-still unknown. A no-fee personal-sign connectivity probe is now provided to
-distinguish ping behavior from actual signing-request delivery. Locally
-verified proof is bound to the provider/address for two minutes and can replace
-the ping check. Thirteen targeted tests cover recovery and signing validation,
-including wrong-signer rejection and proof expiry. The phone signing test
-still needs to be exercised by the owner.
+Real Robinhood Wallet signing and the factory deployment succeeded. Recovery
+uses one SDK client and a pinned sender nonce. The factory's exact runtime is
+checked before any call. See CONTRACT-SETUP.md for deployment and recovery.
 
-The owner confirmed the connectivity message reached Robinhood Wallet and
-was accepted, but the browser timed out without a signature response. A
-concrete lifecycle defect was found: recovery could initialize an additional
-SDK client for the same persisted session. Initialization is now single-instance
-per page and retained across disconnect/reconnect, with a single disconnect
-listener. Fifteen targeted tests and type checks passed, including recovery
-client reuse and retry after initialization failure. The defect is a plausible
-cause, not a proven diagnosis of the missing response. A fresh single-tab
-phone/browser signing test is still required.
+## Remaining acceptance work
 
-The owner-approved privacy policy is available at `/privacy`, linked from the
-shared application footer. Google Branding should use the primary homepage
-and `https://wifaura.sha-i.com/privacy`; Google production publishing remains
-an owner-controlled console step.
+The owner needs a payer and separate Reserve EOA, both different from treasury.
+Two standard Ethereum accounts in a new MetaMask wallet are the planned test
+setup. The owner creates and backs them up; the app verifies ownership through
+signatures. No private key or recovery phrase is requested by the agent.
 
-Hosting update: the primary domain will be `wifaura.sha-i.com`, with
-Squarespace retaining the parent domain's DNS and all existing subdomains.
-A separate Pages project `wifaura` has been created at `wifaura.pages.dev`,
-and `wifaura.sha-i.com` is active on it with the single CNAME record
-documented in `CUSTOM-DOMAIN.md`. The Worker URL below remains a fallback.
-The owner has now saved the Squarespace CNAME; authoritative DNS, 1.1.1.1
-and 8.8.8.8 confirm `wifaura.sha-i.com -> wifaura.pages.dev`. Cloudflare
-domain verification and HTTPS certificate validation are active; HTTPS returned 200.
-Pages production deployment `cdb652e9` (source `02ba7aa`) is published; `/`, `/auth` and
-`/collective` returned HTTP 200 with the correct WIFAURA page titles.
-The current `wrangler.jsonc` and default build target Pages;
-`wrangler.worker.jsonc` preserves the earlier Worker configuration.
+Confirm finality, verify the wallet links and backend access, review funding
+and WIF acquisition, then approve one real $1-equivalent WIF checkout. Check
+finalized payment evidence, both equal transfers, exactly one artifact,
+Reserve delivery and independent Collective progress. Repeating verification
+must not change totals or resend payment. No real WIF checkout has passed yet.
 
-The owner authorized a public GitHub repository and Cloudflare Workers deployment.
+## Validation and submission
 
-- Public repository: `https://github.com/shalynmonet/wifaura`.
-- Cloudflare Worker target name: `wifaura`.
-- Backend: new project `bvnjosopyjblugshdbwd` in SHA-I; approved bootstrap applied.
-- Hosted checks: zero imported collectors/artworks/WIF quotes, zero WIFAURA
-  contributions, seven locked milestones, one current daily drop.
-- Public app: `https://wifaura.sha-i.com`; fallback: `https://wifaura.wifaura.workers.dev`.
-- Earlier Cloudflare Worker configuration is preserved in `wrangler.worker.jsonc`. Daily
-  artifact, seven locked Collective milestones and private-page sign-in
-  redirects were verified in a browser.
-- Google provider is enabled, verified through public Auth settings. Its
-  authorization endpoint returns a 302 to accounts.google.com with the correct
-  Supabase callback. The Google button is enabled in the production build.
-- Supabase Site URL and Redirect URLs previously used the Worker origin;
-  the owner must now update them to the custom domain. A real signup or
-  Google sign-in through account selection and return has not been exercised here.
-- Earlier Worker revision: `68c22bb18573bcf8b4d6a5a965efb453ed218962`.
-- Earlier Worker version: `e3b5f215-39eb-4ed5-a392-545fa0db1f2f`.
-- Payments: disabled pending deployed, verified payment contract and backend.
-- Complimentary launch: wallet linking and paid controls are visibly disabled.
-  The protected server key and verified contract must be configured before
-  enabling WIF checkout. Browser build and server payment flags both default off.
-- Price: $1 USD equivalent in WIF, live quote, two-minute maximum validity.
-- Treasury: `0x1fbe8ca7ab3bb424520972b6e27c0130f4971985`.
+Fifteen targeted wallet/recovery tests, the disposable-EVM factory test,
+read-only mainnet simulation, type checks, production builds and HTTPS checks
+passed. These do not replace the real checkout acceptance test.
 
-No real payment or Reserve delivery has been verified. The Solidity contract
-has been tested locally. Contract deployment and a real checkout require an
-approved wallet transaction; web publishing does not authorize spending funds.
-
-The protected server key must be stored in the active Pages project's encrypted
-environment settings as `SUPABASE_SECRET_KEY` (preferred) or the supported
-legacy name `SUPABASE_SERVICE_ROLE_KEY` before activating wallet proofs and paid checkout.
-It has not been retrieved or placed in public source. The contract must be
-deployed and verified, then both browser/server payment flags enabled.
-
-To rebuild this deployment, copy `.env.example` to ignored `.env.local`, keep
-the launch flags off, run `npm ci`, `npm run build`, then `npm run deploy` after
-reviewing the account and bindings in `wrangler.jsonc`. Public project URLs and
-publishable keys are not secrets. Never add the server key to that file or to
-any `VITE_*` variable.
-
-NIMAURA's original repository and backend remain unchanged.
+Official rules: https://worldisflat.fun/build/rules
+Entry is free; ETH funding was for deployment gas. Submissions close November
+12, 2026 at 17:30 UTC (11:30 a.m. Chicago); the final closes November 16 at the
+same time. A demo video and actual WIF payment evidence remain outstanding.
+No hackathon submission has been made.

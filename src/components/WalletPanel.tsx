@@ -6,7 +6,10 @@ import { connectWifWallet, signWifMessage } from "@/lib/wif/wallet";
 import { Button } from "@/components/ui/button";
 
 export function WalletPanel() {
-  if (import.meta.env["VITE_WIFAURA_PAYMENTS_ENABLED"] === "false")
+  if (
+    import.meta.env["VITE_WIFAURA_PAYMENTS_ENABLED"] === "false" &&
+    import.meta.env["VITE_WIFAURA_WALLETS_ENABLED"] !== "true"
+  )
     return (
       <section className="mt-6 space-y-3 rounded-sm border p-4">
         <h2 className="eyebrow">WIF wallets</h2>
@@ -45,6 +48,11 @@ function ActiveWalletPanel() {
   return (
     <section className="mt-6 space-y-3 rounded-sm border p-4">
       <h2 className="eyebrow">Robinhood Chain wallets</h2>
+      {import.meta.env["VITE_WIFAURA_PAYMENTS_ENABLED"] === "false" && (
+        <p className="text-sm text-muted-foreground">
+          Wallet setup is available. Paid checkout is not enabled yet.
+        </p>
+      )}
       <p className="text-xs text-muted-foreground">
         Select an account in your wallet, then sign an ownership message. Switch accounts to choose
         a separate Reserve.

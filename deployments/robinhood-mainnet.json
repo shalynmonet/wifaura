@@ -1,0 +1,19 @@
+{
+  "chainId": 4663,
+  "contract": "0x2d889Ff462B21177A4C2E6384D258eC867222D69",
+  "token": "0x5173b8eA6923c2d40267890D45C46a3480954773",
+  "treasury": "0x1fbe8ca7ab3bb424520972b6e27c0130f4971985",
+  "codeHash": "0x4bdfd605b0c3ba7414344ccdb5290cde5e0862eb570ace6e43edd5f7821419b4",
+  "deploymentTransaction": "0xd1da54769d0b7deb6bd60923a28997c2e791f292c9d7e1f1ae1379ce61725a9d",
+  "blockNumber": "112209872",
+  "blockHash": "0x21f24a6c0728c51c15635226ac6a14c7178cfeba02cefca6ac0f71bcb5ff67b9",
+  "factory": "0x4e59b44847b379578588920ca78fbf26c0b4956c",
+  "status": "success",
+  "gasUsed": "618367",
+  "gasPaidEth": "0.000012372286936",
+  "lastFinalizedBlock": "112207071",
+  "finalized": false,
+  "sourceVerified": true,
+  "paymentsEnabled": false,
+  "realCheckoutVerified": false
+}

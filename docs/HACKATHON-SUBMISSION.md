@@ -1,7 +1,11 @@
 # WIFAURA submission draft
 
-Status: prepared locally; not submitted. No live URL or real payment evidence
-exists yet. Replace the pending fields after approved deployment and testing.
+Status: prepared locally; not submitted. The app is live at
+https://wifaura.sha-i.com and source is public at
+https://github.com/shalynmonet/wifaura. Contract
+`0x2d889Ff462B21177A4C2E6384D258eC867222D69` is deployed and source-verified.
+Real WIF checkout evidence and the demo video remain pending; deployment
+alone does not demonstrate the required WIF utility.
 
 **Name:** WIFAURA
 
