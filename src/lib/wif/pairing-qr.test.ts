@@ -26,9 +26,11 @@ it("offers a direct same-phone link on iPhone and keeps QR scanning optional", (
   device("Mozilla/5.0 iPhone");
   const cancel = vi.fn();
   const close = pairingQr(uri, cancel);
-  const link = document.querySelector("a")!;
+  const link = document.querySelector('a[href^="robinhood-wallet:"]')!;
   expect(link.textContent).toBe("Open Robinhood Wallet");
   expect(link.getAttribute("href")).toBe(robinhoodPairingLink(uri));
+  const metamask = document.querySelector('a[href^="https://metamask.app.link/"]')!;
+  expect(new URL(metamask.getAttribute("href")!).searchParams.get("uri")).toBe(uri);
   expect(document.querySelector("details")!.open).toBe(false);
   expect(document.body.textContent).toContain("return to this browser tab");
   expect(cancel).not.toHaveBeenCalled();

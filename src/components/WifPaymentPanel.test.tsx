@@ -9,6 +9,10 @@ const m = vi.hoisted(() => ({
   release: vi.fn(),
   approve: vi.fn(),
   pay: vi.fn(),
+  assert: vi.fn(),
+  connect: vi.fn(),
+  change: vi.fn(),
+  approvalStatus: vi.fn(),
 }));
 vi.mock("@tanstack/react-start", () => ({ useServerFn: (fn: unknown) => fn }));
 vi.mock("@/lib/wif/payments.functions", () => ({
@@ -17,8 +21,15 @@ vi.mock("@/lib/wif/payments.functions", () => ({
   prepareWif: m.prepare,
   checkWif: m.check,
   releaseWif: m.release,
+  approvalWifStatus: m.approvalStatus,
 }));
-vi.mock("@/lib/wif/wallet", () => ({ approveWif: m.approve, payWif: m.pay }));
+vi.mock("@/lib/wif/wallet", () => ({
+  approveWif: m.approve,
+  payWif: m.pay,
+  assertWifWallet: m.assert,
+  connectWifWallet: m.connect,
+  changeWifWallet: m.change,
+}));
 const q = {
   id: "q",
   quote_key: "0x" + "a".repeat(64),
@@ -40,6 +51,9 @@ beforeEach(() => {
   m.account.mockResolvedValue({ quotes: [q], links: [] });
   m.prepare.mockResolvedValue({ ...q, status: "pending" });
   m.pay.mockResolvedValue("0x" + "b".repeat(64));
+  m.assert.mockResolvedValue(undefined);
+  m.connect.mockResolvedValue(q.sender);
+  m.approvalStatus.mockResolvedValue({ approved: true, expired: false });
 });
 afterEach(() => {
   cleanup();
@@ -67,6 +81,7 @@ it("allows a verified launch payer to request a quote", async () => {
   m.quote.mockResolvedValue(q);
   render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
   const button = screen.getByText("Get WIF quote");
+  fireEvent.click(await screen.findByText("Connect paying wallet"));
   await waitFor(() => expect(button).not.toBeDisabled());
   fireEvent.click(button);
   await waitFor(() => expect(m.quote).toHaveBeenCalledTimes(1));
@@ -84,6 +99,8 @@ it("shows a clear rate-limit message without suggesting another payment", async 
 it("opens only one wallet payment when clicked twice", async () => {
   render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
   const button = await screen.findByText("2. Pay and unseal");
+  fireEvent.click(await screen.findByText("Connect paying wallet"));
+  await waitFor(() => expect(button).not.toBeDisabled());
   fireEvent.click(button);
   fireEvent.click(button);
   await waitFor(() => expect(m.pay).toHaveBeenCalledTimes(1));
@@ -93,6 +110,8 @@ it("opens only one wallet payment when clicked twice", async () => {
 it("keeps an ambiguous wallet send pending across reload, and checking never sends again", async () => {
   m.pay.mockRejectedValue(new Error("Wallet timed out"));
   const view = render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
+  fireEvent.click(await screen.findByText("Connect paying wallet"));
+  await waitFor(() => expect(screen.getByText("2. Pay and unseal")).not.toBeDisabled());
   fireEvent.click(await screen.findByText("2. Pay and unseal"));
   await screen.findByText("Wallet timed out");
   view.unmount();
@@ -107,14 +126,42 @@ it("keeps an ambiguous wallet send pending across reload, and checking never sen
 it("reveals only after server fulfillment and never after token approval alone", async () => {
   const fulfilled = vi.fn();
   m.approve.mockResolvedValue("0x" + "c".repeat(64));
+  m.approvalStatus
+    .mockResolvedValueOnce({ approved: false, expired: false })
+    .mockResolvedValue({ approved: true, expired: false });
   render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={fulfilled} />);
+  fireEvent.click(await screen.findByText("Connect paying wallet"));
+  await waitFor(() => expect(screen.getByText("1. Approve exact WIF amount")).not.toBeDisabled());
   fireEvent.click(await screen.findByText("1. Approve exact WIF amount"));
   await waitFor(() => expect(m.approve).toHaveBeenCalledTimes(1));
   expect(fulfilled).not.toHaveBeenCalled();
+  await waitFor(() => expect(screen.getByText("2. Pay and unseal")).not.toBeDisabled());
   fireEvent.click(await screen.findByText("2. Pay and unseal"));
   const check = await screen.findByText("Check payment");
   m.check.mockResolvedValue({ ...q, status: "fulfilled", manifestation_id: "manifestation" });
   await waitFor(() => expect(check).not.toBeDisabled());
   fireEvent.click(check);
   await waitFor(() => expect(fulfilled).toHaveBeenCalledWith("manifestation"));
+});
+it("blocks payment until the correct payer and onchain allowance are confirmed", async () => {
+  m.approvalStatus.mockResolvedValue({ approved: false, expired: false });
+  render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
+  const pay = await screen.findByText("2. Pay and unseal");
+  expect(pay).toBeDisabled();
+  m.assert.mockRejectedValueOnce(new Error("Wrong payer selected"));
+  fireEvent.click(screen.getByText("Connect paying wallet"));
+  await screen.findByText("Wrong payer selected");
+  expect(m.approvalStatus).not.toHaveBeenCalled();
+  expect(m.prepare).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText("Connect paying wallet"));
+  await screen.findByText(/WIF approval is not confirmed/);
+  expect(pay).toBeDisabled();
+  m.approvalStatus.mockResolvedValue({ approved: true, expired: false });
+  fireEvent.click(screen.getByText("Check WIF approval"));
+  await waitFor(() => expect(pay).not.toBeDisabled());
+  m.assert.mockRejectedValueOnce(new Error("Wallet changed before payment"));
+  fireEvent.click(pay);
+  await screen.findByText("Wallet changed before payment");
+  expect(m.prepare).not.toHaveBeenCalled();
+  expect(m.pay).not.toHaveBeenCalled();
 });

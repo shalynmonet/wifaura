@@ -1,36 +1,35 @@
 import { toCanvas } from "qrcode";
+import { mobileWalletDevice } from "./mobile-wallet";
 
 // WalletConnect's Robinhood listing registers this native scheme (no universal
 // link). Reown's formatNativeUrl appends wc?uri=<encoded pairing URI>.
 export function robinhoodPairingLink(uri: string) {
   return `robinhood-wallet://wc?uri=${encodeURIComponent(uri)}`;
 }
-export function mobileWalletDevice() {
-  return (
-    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  );
-}
 
 // Pairing URIs stay in this page; never log or send them to an image service.
 export function pairingQr(uri: string, cancel: () => void) {
   const dialog = document.createElement("dialog");
-  dialog.setAttribute("aria-label", "Connect Robinhood Wallet");
+  dialog.setAttribute("aria-label", "Connect your wallet");
   dialog.style.cssText =
     "max-width:360px;width:90vw;padding:24px;border-radius:12px;background:#fff;color:#111;";
   const title = document.createElement("h2");
-  title.textContent = "Connect Robinhood Wallet";
+  title.textContent = "Connect your paying wallet";
   title.style.cssText = "font-size:20px;font-weight:600;margin-bottom:12px";
   const text = document.createElement("p");
   const mobile = mobileWalletDevice();
   text.textContent = mobile
-    ? "Tap Open Robinhood Wallet, approve the connection in the app, then return to this browser tab. Keep this tab open."
+    ? "Choose the app holding your paying wallet, approve the connection in the app, then return to this browser tab. Keep this tab open."
     : "Open Robinhood Wallet on your phone → Web3 → the scanner beside Search. Scan this code and approve the connection. Keep this page open on your computer.";
   const openWallet = document.createElement("a");
   openWallet.textContent = "Open Robinhood Wallet";
   openWallet.href = robinhoodPairingLink(uri);
   openWallet.style.cssText =
     "display:block;text-align:center;background:#cda34e;color:#111;padding:14px;border-radius:6px;margin:16px 0;font-weight:600";
+  const metamask = document.createElement("a");
+  metamask.textContent = "Open MetaMask";
+  metamask.href = `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
+  metamask.style.cssText = openWallet.style.cssText;
   const help = document.createElement("p");
   help.textContent =
     "If the app does not open, make sure Robinhood Wallet is installed and open WIFAURA in Safari or Chrome.";
@@ -51,8 +50,8 @@ export function pairingQr(uri: string, cancel: () => void) {
     cancel();
   });
   qr.append(summary, canvas);
-  if (mobile) dialog.append(title, text, openWallet, help, qr, button);
-  else dialog.append(title, text, qr, openWallet, button);
+  if (mobile) dialog.append(title, text, metamask, openWallet, help, qr, button);
+  else dialog.append(title, text, qr, metamask, openWallet, button);
   document.body.append(dialog);
   dialog.showModal();
   void toCanvas(canvas, uri, { width: 300, margin: 2, errorCorrectionLevel: "M" }).catch(() => {

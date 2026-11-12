@@ -125,6 +125,38 @@ export const quoteWif = createServerFn({ method: "POST" })
       throw new Error("Launch-test wallet changed. Reconnect the authorized payer.");
     return result.data as WifQuote;
   });
+export const approvalWifStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(id)
+  .handler(async ({ data, context }) => {
+    const { wifStore } = await import("./store.server");
+    const { paymentConfiguration } = await import("./rpc.server");
+    const { erc20Abi } = await import("viem");
+    const { WIF_TOKEN } = await import("./config");
+    const { data: q } = await wifStore()
+      .from("wif_quotes")
+      .select("*")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .single();
+    if (!q || q.status !== "quoted") throw new Error("Quote unavailable. Check existing payment.");
+    const cfg = await paymentConfiguration();
+    if (
+      q.router.toLowerCase() !== cfg.router.toLowerCase() ||
+      q.treasury.toLowerCase() !== cfg.treasury.toLowerCase()
+    )
+      throw new Error("Quote deployment changed.");
+    const allowance = await cfg.client.readContract({
+      address: WIF_TOKEN,
+      abi: erc20Abi,
+      functionName: "allowance",
+      args: [q.sender, q.router],
+    });
+    return {
+      approved: allowance >= BigInt(q.amount),
+      expired: Date.parse(q.expires_at) <= Date.now(),
+    };
+  });
 export const prepareWif = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(id)

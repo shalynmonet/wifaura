@@ -8,8 +8,15 @@ import {
   prepareWif,
   checkWif,
   releaseWif,
+  approvalWifStatus,
 } from "@/lib/wif/payments.functions";
-import { approveWif, payWif } from "@/lib/wif/wallet";
+import {
+  approveWif,
+  payWif,
+  assertWifWallet,
+  changeWifWallet,
+  connectWifWallet,
+} from "@/lib/wif/wallet";
 import { type WifQuote } from "@/lib/wif/config";
 import type { Intention } from "@/lib/manifest";
 import { paymentTestAccess } from "@/lib/wif/test-access";
@@ -53,8 +60,18 @@ function ActiveWifPaymentPanel({
     prepare = useServerFn(prepareWif),
     check = useServerFn(checkWif);
   const release = useServerFn(releaseWif);
+  const approval = useServerFn(approvalWifStatus);
+  const [approved, setApproved] = useState(false);
+  const [walletChecked, setWalletChecked] = useState(false);
+  const [payer, setPayer] = useState<string>();
   const [q, setQ] = useState<WifQuote | null>(null),
     [ready, setReady] = useState(false);
+  const [approvalRequested, setApprovalRequested] = useState(false);
+  useEffect(() => {
+    setApproved(false);
+    setWalletChecked(false);
+    setApprovalRequested(false);
+  }, [q?.id]);
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [hash, setHash] = useState("");
@@ -65,6 +82,7 @@ function ActiveWifPaymentPanel({
     account()
       .then((a) => {
         if (active) {
+          setPayer(a.links.find((link) => link.purpose === "payer")?.address);
           setEligible(
             paymentTestAccess(
               import.meta.env["VITE_WIFAURA_TEST_PAYER"],
@@ -95,6 +113,8 @@ function ActiveWifPaymentPanel({
     try {
       await action();
     } catch (e) {
+      setWalletChecked(false);
+      setApproved(false);
       setMessage(paymentError(e));
     } finally {
       lock.current = false;
@@ -110,9 +130,61 @@ function ActiveWifPaymentPanel({
       onFulfilled(next.manifestation_id);
     } else setMessage("Payment awaits chain finality. Check again later; do not pay again.");
   }
+  async function verifyApproval(quote: WifQuote) {
+    const status = await approval({ data: { id: quote.id } });
+    setApproved(status.approved && !status.expired);
+    setMessage(
+      status.expired
+        ? "Quote expired. Refresh it before continuing."
+        : status.approved
+          ? "WIF spending approval confirmed. You can now review the payment in your wallet."
+          : "WIF approval is not confirmed yet. Review the approval in your wallet, return here, then check again. No payment has been sent.",
+    );
+  }
+  async function connectPayer() {
+    if (q) {
+      await assertWifWallet(q);
+      setWalletChecked(true);
+      await verifyApproval(q);
+    } else {
+      const address = await connectWifWallet();
+      if (!payer || address.toLowerCase() !== payer.toLowerCase())
+        throw new Error(
+          `Connected wallet: ${address}. Your verified paying wallet is ${payer || "not set"}. Select that account, or verify a new payer in Account.`,
+        );
+      setWalletChecked(true);
+      setMessage("Paying wallet connected on Robinhood Chain. Request a fresh quote when ready.");
+    }
+  }
   return (
-    <section className="space-y-3 rounded-sm border p-4">
+    <section className="space-y-3 rounded-sm border p-4 [&_button]:w-full [&_button]:whitespace-normal">
       <p className="eyebrow">Unseal with $WIF</p>
+      {q?.status !== "pending" && (
+        <>
+          <p className="break-all text-xs">
+            Paying wallet: {q?.sender || payer || "Verify a payer in Account first"}
+          </p>
+          <Button variant="outline" disabled={busy || !ready} onClick={() => run(connectPayer)}>
+            {walletChecked ? "Check paying wallet" : "Connect paying wallet"}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                await changeWifWallet();
+                setWalletChecked(false);
+                setApproved(false);
+                setMessage(
+                  "Previous connection closed. Connect the app holding your paying wallet.",
+                );
+              })
+            }
+          >
+            Change wallet app
+          </Button>
+        </>
+      )}
       {!eligible && !q && (
         <p className="text-sm text-muted-foreground">
           Paid checkout is currently limited to the launch-test wallet. Complimentary unsealings
@@ -121,7 +193,7 @@ function ActiveWifPaymentPanel({
       )}
       {!q ? (
         <Button
-          disabled={!ready || !eligible || !intention || busy}
+          disabled={!ready || !eligible || !intention || busy || !walletChecked}
           onClick={() =>
             run(async () => {
               if (intention) {
@@ -153,22 +225,38 @@ function ActiveWifPaymentPanel({
             <>
               <Button
                 variant="outline"
-                disabled={busy}
+                disabled={busy || !walletChecked || approved || approvalRequested}
                 onClick={() =>
                   run(async () => {
+                    await assertWifWallet(q);
                     const h = await approveWif(q);
+                    setApprovalRequested(true);
                     setMessage(
                       `Approval submitted: ${h}. Wait for confirmation, then pay. Approval does not unseal or transfer WIF.`,
                     );
+                    await verifyApproval(q);
                   })
                 }
               >
                 1. Approve exact WIF amount
               </Button>
               <Button
-                disabled={busy}
+                variant="outline"
+                disabled={busy || !walletChecked}
                 onClick={() =>
                   run(async () => {
+                    await assertWifWallet(q);
+                    await verifyApproval(q);
+                  })
+                }
+              >
+                Check WIF approval
+              </Button>
+              <Button
+                disabled={busy || !walletChecked || !approved}
+                onClick={() =>
+                  run(async () => {
+                    await assertWifWallet(q);
                     const pending = await prepare({ data: { id: q.id } });
                     setQ(pending);
                     setMessage(

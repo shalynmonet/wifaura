@@ -7,6 +7,7 @@ import {
   type EIP1193Provider,
 } from "viem";
 import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
+import { mobileWalletRequest } from "./mobile-wallet";
 
 async function createWalletConnect() {
   const projectId = import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"];
@@ -111,7 +112,18 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
         "Wallet did not authorize Robinhood Chain. Reconnect and approve chain 4663.",
       );
     provider.setDefaultChain(`eip155:${robinhood.id}`, robinhood.rpcUrls.default.http[0]);
-    selectedProvider = provider as EIP1193Provider;
+    selectedProvider = {
+      request: (args) => {
+        const send = () => provider.request(args as Parameters<typeof provider.request>[0]);
+        return args.method === "personal_sign" || args.method === "eth_sendTransaction"
+          ? mobileWalletRequest(
+              send,
+              provider.session?.peer?.metadata?.name || "your wallet",
+              args.method,
+            )
+          : send();
+      },
+    } as EIP1193Provider;
     walletConnectProvider = selectedProvider;
     activeWalletConnect = provider;
     return selectedProvider;
@@ -197,7 +209,7 @@ export async function pingWifWallet(address?: `0x${string}`) {
 }
 async function wallet(forceWalletConnect = false) {
   const ethereum = await getWifProvider(forceWalletConnect);
-  return createWalletClient({ chain: robinhood, transport: custom(ethereum) });
+  return createWalletClient({ chain: robinhood, transport: custom(ethereum, { retryCount: 0 }) });
 }
 export async function connectWifWallet(forceWalletConnect = false) {
   const client = await wallet(forceWalletConnect);
@@ -224,16 +236,21 @@ export async function signWifMessage(message: string, address: `0x${string}`) {
 async function checkedWallet(q: WifQuote) {
   const client = await wallet();
   const [address] = await client.getAddresses();
-  if (
-    (await client.getChainId()) !== robinhood.id ||
-    address?.toLowerCase() !== q.sender.toLowerCase()
-  )
+  if ((await client.getChainId()) !== robinhood.id)
+    throw new Error("Select Robinhood Chain in your wallet before continuing.");
+  if (address?.toLowerCase() !== q.sender.toLowerCase())
     throw new Error(
-      "Wallet account or network changed. Restore the quoted account on Robinhood Chain.",
+      `Connected wallet: ${address || "none"}. This quote requires payer ${q.sender}. Select that account in your wallet. To use a different payer, verify it in Account before requesting a new quote.`,
     );
   if (Date.now() >= Date.parse(q.expires_at))
     throw new Error("Quote expired. Check any existing payment before requesting another.");
   return client;
+}
+export async function assertWifWallet(q: WifQuote) {
+  await checkedWallet(q);
+}
+export async function changeWifWallet() {
+  await disconnectWifSession();
 }
 export async function approveWif(q: WifQuote) {
   const client = await checkedWallet(q);
