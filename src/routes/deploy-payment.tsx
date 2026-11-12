@@ -19,6 +19,7 @@ import {
   disconnectWifSession,
   getWifProvider,
   pingWifWallet,
+  testWifSigning,
 } from "@/lib/wif/wallet";
 import { requireUnusedDeploymentNonce } from "@/lib/wif/deployment-recovery";
 import artifact from "@/lib/wif/deployment-artifact.json";
@@ -49,6 +50,27 @@ function Deployment() {
   const [status, setStatus] = useState("");
   const inFlight = useRef(false);
   const sent = useRef(false);
+  async function testSigning() {
+    if (inFlight.current || !address) return;
+    inFlight.current = true;
+    setBusy(true);
+    setError("");
+    setStatus(
+      "Open Robinhood Wallet and review the WIFAURA connectivity-test message. This test costs no ETH…",
+    );
+    try {
+      await testWifSigning(address);
+      setStatus(
+        "Signing test passed and the signature matches your wallet. The connection can deliver signing requests. No transaction was sent. This check is valid for two minutes.",
+      );
+    } catch (e) {
+      setStatus("");
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+      inFlight.current = false;
+    }
+  }
   async function recover() {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -180,7 +202,7 @@ function Deployment() {
       const gas = await publicClient.estimateGas({ account, data });
       const gasPrice = await publicClient.getGasPrice();
       setStatus("Checking the wallet connection. Keep Robinhood Wallet open on your iPhone…");
-      await pingWifWallet();
+      await pingWifWallet(account);
       // Mark before the wallet call: an ambiguous failure must never permit an automatic resend.
       sent.current = true;
       localStorage.setItem(
@@ -265,6 +287,17 @@ function Deployment() {
           <p>
             Connected: <span className="break-all">{address}</span>
           </p>
+        )}
+        {address && (
+          <div>
+            <button className={button} disabled={busy || sent.current} onClick={testSigning}>
+              Test wallet signing — no ETH
+            </button>
+            <p className="mt-3">
+              This asks you to sign a connectivity-test message, then checks the signature locally.
+              It does not authorize a payment or deployment.
+            </p>
+          </div>
         )}
         {estimate && (
           <>

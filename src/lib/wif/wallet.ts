@@ -1,4 +1,11 @@
-import { createWalletClient, custom, erc20Abi, type EIP1193Provider } from "viem";
+import {
+  createWalletClient,
+  custom,
+  erc20Abi,
+  recoverMessageAddress,
+  toHex,
+  type EIP1193Provider,
+} from "viem";
 import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
 
 async function initWalletConnect() {
@@ -27,12 +34,14 @@ export async function disconnectWifSession() {
   selectedProvider = undefined;
   walletConnectProvider = undefined;
   activeWalletConnect = undefined;
+  signingProof = undefined;
 }
 
 let selectedProvider: EIP1193Provider | undefined;
 let walletConnectProvider: EIP1193Provider | undefined;
 let activeWalletConnect: Awaited<ReturnType<typeof initWalletConnect>> | undefined;
 let connecting: Promise<EIP1193Provider> | undefined;
+let signingProof: { provider: EIP1193Provider; address: string; expires: number } | undefined;
 export async function getWifProvider(forceWalletConnect = false): Promise<EIP1193Provider> {
   if (selectedProvider && (!forceWalletConnect || selectedProvider === walletConnectProvider))
     return selectedProvider;
@@ -45,6 +54,7 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
       selectedProvider = undefined;
       walletConnectProvider = undefined;
       activeWalletConnect = undefined;
+      signingProof = undefined;
     });
     if (!provider.session) {
       const { pairingQr } = await import("./pairing-qr");
@@ -97,7 +107,57 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
     connecting = undefined;
   }
 }
-export async function pingWifWallet() {
+export async function testWifSigning(address: `0x${string}`) {
+  signingProof = undefined;
+  const provider = await getWifProvider();
+  const client = createWalletClient({
+    chain: robinhood,
+    transport: custom(provider, { retryCount: 0 }),
+  });
+  const [account] = await client.getAddresses();
+  if (
+    account?.toLowerCase() !== address.toLowerCase() ||
+    (await client.getChainId()) !== robinhood.id
+  )
+    throw new Error("Wallet account or network changed. Reconnect before testing.");
+  const message = `WIFAURA wallet connectivity test\nOrigin: https://wifaura.sha-i.com\nThis signature only tests this wallet connection. It does not authorize a payment, contract deployment, token approval, or account login.\nTime: ${new Date().toISOString()}\nNonce: ${crypto.randomUUID()}`;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const signature = await Promise.race([
+      provider.request({ method: "personal_sign", params: [toHex(message), address] }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                "No signing response arrived. No transaction was requested. Do not deploy; share this result in the setup chat.",
+              ),
+            ),
+          60000,
+        );
+      }),
+    ]);
+    const signer = await recoverMessageAddress({ message, signature });
+    if (signer.toLowerCase() !== address.toLowerCase())
+      throw new Error("Signing response belongs to a different wallet.");
+    if (provider !== selectedProvider)
+      throw new Error("Wallet connection changed during the test.");
+    signingProof = { provider, address: address.toLowerCase(), expires: Date.now() + 120000 };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+export async function pingWifWallet(address?: `0x${string}`) {
+  // A verified, fresh personal_sign response proves actual request delivery
+  // even if a wallet does not answer the separate session-ping method.
+  if (
+    address &&
+    signingProof &&
+    signingProof.provider === selectedProvider &&
+    signingProof.address === address.toLowerCase() &&
+    signingProof.expires > Date.now()
+  )
+    return;
   const provider = activeWalletConnect;
   if (!provider?.session) throw new Error("Reconnect Robinhood Wallet before deployment.");
   let timer: ReturnType<typeof setTimeout> | undefined;

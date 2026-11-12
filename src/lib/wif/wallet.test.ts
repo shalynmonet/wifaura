@@ -1,16 +1,26 @@
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
+import { fromHex } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
-const mock = vi.hoisted(() => ({ init: vi.fn(), connect: vi.fn(), on: vi.fn(), ping: vi.fn() }));
+const mock = vi.hoisted(() => ({
+  init: vi.fn(),
+  connect: vi.fn(),
+  on: vi.fn(),
+  ping: vi.fn(),
+  request: vi.fn(),
+}));
 vi.mock("@walletconnect/universal-provider", () => ({ UniversalProvider: { init: mock.init } }));
 vi.mock("./pairing-qr", () => ({ pairingQr: vi.fn(() => vi.fn()) }));
 beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
+  mock.request.mockReset();
   vi.stubGlobal("window", {});
   const provider = {
     session: undefined as
       undefined | { topic: string; namespaces: { eip155: { accounts: string[] } } },
     client: { ping: mock.ping },
+    request: mock.request,
     connect: mock.connect,
     on: mock.on,
     removeListener: vi.fn(),
@@ -125,4 +135,52 @@ it("stops waiting for an unreachable wallet without sending a transaction", asyn
   const check = expect(pingWifWallet()).rejects.toThrow(/No deployment was requested/);
   await vi.advanceTimersByTimeAsync(12000);
   await check;
+});
+it("accepts an actual matching signature instead of relying on the ping method", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const account = privateKeyToAccount(generatePrivateKey());
+  mock.request.mockImplementation(
+    async ({ method, params }: { method: string; params?: string[] }) => {
+      if (method === "eth_chainId") return "0x1237";
+      if (method === "eth_accounts") return [account.address];
+      if (method === "personal_sign")
+        return account.signMessage({ message: fromHex(params![0]! as `0x${string}`, "string") });
+      throw new Error("Unexpected request");
+    },
+  );
+  const { getWifProvider, testWifSigning, pingWifWallet } = await import("./wallet");
+  await getWifProvider(true);
+  await testWifSigning(account.address);
+  await pingWifWallet(account.address);
+  expect(mock.ping).not.toHaveBeenCalled();
+  expect(mock.request.mock.calls.some(([r]) => r.method === "eth_sendTransaction")).toBe(false);
+  vi.useFakeTimers();
+  await vi.advanceTimersByTimeAsync(120001);
+  await pingWifWallet(account.address);
+  expect(mock.ping).toHaveBeenCalledOnce();
+});
+it("rejects a signature from another wallet without establishing delivery proof", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const account = privateKeyToAccount(generatePrivateKey());
+  const other = privateKeyToAccount(generatePrivateKey());
+  mock.request.mockImplementation(
+    async ({ method, params }: { method: string; params?: string[] }) => {
+      if (method === "eth_chainId") return "0x1237";
+      if (method === "eth_accounts") return [account.address];
+      if (method === "personal_sign")
+        return other.signMessage({ message: fromHex(params![0]! as `0x${string}`, "string") });
+      throw new Error("Unexpected request");
+    },
+  );
+  const { getWifProvider, testWifSigning, pingWifWallet } = await import("./wallet");
+  await getWifProvider(true);
+  await expect(testWifSigning(account.address)).rejects.toThrow(/different wallet/);
+  await pingWifWallet(account.address);
+  expect(mock.ping).toHaveBeenCalledOnce();
+});
+it("requires a connected wallet when no signing proof exists", async () => {
+  const { pingWifWallet } = await import("./wallet");
+  await expect(pingWifWallet("0x1111111111111111111111111111111111111111")).rejects.toThrow(
+    /Reconnect Robinhood Wallet/,
+  );
 });

@@ -24,6 +24,14 @@ and retains the original nonce for any separately approved retry. A 12-second
 wallet ping precedes the single send request. Ten targeted tests, type checks,
 and production builds passed. Contract deployment remains unverified.
 
+The next wallet ping timed out before sending a transaction. The root cause is
+still unknown. A no-fee personal-sign connectivity probe is now provided to
+distinguish ping behavior from actual signing-request delivery. Locally
+verified proof is bound to the provider/address for two minutes and can replace
+the ping check. Thirteen targeted tests cover recovery and signing validation,
+including wrong-signer rejection and proof expiry. The phone signing test
+still needs to be exercised by the owner.
+
 The owner-approved privacy policy is available at `/privacy`, linked from the
 shared application footer. Google Branding should use the primary homepage
 and `https://wifaura.sha-i.com/privacy`; Google production publishing remains

@@ -31,6 +31,14 @@ It uses the same pinned compiler output as the local contract tests. The
    Before sending, a 12-second session ping checks wallet reachability. The
    deployment uses one explicit eth_sendTransaction request, a pinned nonce,
    and estimated gas with a 20% gas-limit buffer; there is no fallback send.
+   A ping timeout does not establish the root cause of a missing wallet prompt.
+   Test wallet signing — no ETH sends one personal_sign request for a fixed,
+   non-authorizing connectivity message with a random nonce and timestamp.
+   It verifies the recovered EOA address locally and keeps proof only in memory
+   for two minutes, bound to the same provider and address. That verified
+   signing response can replace the ping check; a stale or mismatched response
+   cannot. No transaction is requested by the test. A missing response times
+   out after 60 seconds without unlocking a deployment automatically.
 5. Give the public transaction hash and contract address to the setup process.
    A successful receipt alone does not enable payments. Run the independent
    deployment source/getter/code-hash checks, verify explorer source, configure
