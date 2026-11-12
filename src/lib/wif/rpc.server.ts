@@ -12,16 +12,36 @@ import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
 import { rpcFetch } from "./rpc-fetch.server";
 
 export function chainClient() {
-  const url = process.env["WIFAURA_RPC_URL"] || robinhood.rpcUrls.default.http[0];
+  const url =
+    process.env["WIFAURA_PRIVATE_RPC_URL"] ||
+    process.env["WIFAURA_RPC_URL"] ||
+    robinhood.rpcUrls.default.http[0];
   if (new URL(url).protocol !== "https:") throw new Error("HTTPS chain RPC required.");
   return createPublicClient({
     chain: robinhood,
-    transport: http(url, {
-      timeout: 12_000,
-      retryCount: 0,
-      fetchFn: rpcFetch(url),
-      fetchOptions: { redirect: "manual" },
-    }),
+    transport: (options) => {
+      const base = http(url, {
+        timeout: 12_000,
+        retryCount: 0,
+        fetchFn: rpcFetch(url),
+        fetchOptions: { redirect: "manual" },
+      })(options);
+      // Viem errors include the endpoint URL. Never return a private API key
+      // in a server-function response or wallet checkout error.
+      const request = (async (...args: Parameters<typeof base.request>) => {
+        try {
+          return await base.request(...args);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "";
+          throw new Error(
+            /429|Too Many Requests|Chain is busy/i.test(message)
+              ? "Robinhood Chain is busy. Wait one minute, then check again. Do not resend a pending payment."
+              : "Unable to read Robinhood Chain. Check again later; do not resend a pending payment.",
+          );
+        }
+      }) as typeof base.request;
+      return { ...base, request };
+    },
   });
 }
 export async function paymentConfiguration() {
