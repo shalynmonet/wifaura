@@ -2,6 +2,20 @@
 
 Updated November 11, 2026.
 
+Signing now passed on the owner's real Robinhood Wallet. Direct contract
+creation still produced no wallet prompt; the latest read-only check showed
+zero confirmed/pending outgoing transactions and no direct contract code.
+The setup page now uses the code-pinned canonical deterministic deployment
+proxy as a normal zero-value contract call. Local EVM tests, type checks,
+build and mainnet gas simulation passed. Expected payment contract:
+`0x2d889Ff462B21177A4C2E6384D258eC867222D69`. Actual factory-call approval,
+deployment, independent source verification and real checkout remain pending.
+
+Official rules/schedule rechecked at https://worldisflat.fun/build/rules:
+entry is free, and buying/holding tokens is not an entry requirement. ETH
+funding is for deployment gas. Submission deadline is November 12, 2026,
+17:30 UTC (11:30 a.m. Chicago); final closes November 16 at the same time.
+
 Owner setup is published at `/deploy-payment`: a WalletConnect QR pairing flow
 for Robinhood Wallet, followed by a read-only gas estimate and a separate
 explicit deployment consent. Phone pairing and gas estimation succeeded;

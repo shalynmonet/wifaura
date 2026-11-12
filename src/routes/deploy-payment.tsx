@@ -23,11 +23,13 @@ import {
 } from "@/lib/wif/wallet";
 import { requireUnusedDeploymentNonce } from "@/lib/wif/deployment-recovery";
 import artifact from "@/lib/wif/deployment-artifact.json";
+import { assertDeploymentFactory, factoryDeploymentPlan } from "@/lib/wif/deployment-factory";
 
 const treasury = "0x1fbe8ca7ab3bb424520972b6e27c0130f4971985" as const;
 const abi = artifact.abi as Abi;
 const bytecode = artifact.bytecode as `0x${string}`;
 const args = [WIF_TOKEN, treasury] as const;
+const factoryPlan = factoryDeploymentPlan(encodeDeployData({ abi, bytecode, args }));
 const publicClient = createPublicClient({
   chain: robinhood,
   transport: http(undefined, { retryCount: 0 }),
@@ -98,9 +100,15 @@ function Deployment() {
       const candidate = getContractAddress({ from: attempt.account, nonce: BigInt(nonce) });
       if ((await publicClient.getChainId()) !== robinhood.id)
         throw new Error("RPC network mismatch.");
-      const code = await publicClient.getCode({ address: candidate });
-      if (code && code !== "0x") {
-        setContract(candidate);
+      const existing = await Promise.all(
+        [candidate, factoryPlan.address].map(async (address) => ({
+          address,
+          code: await publicClient.getCode({ address }),
+        })),
+      );
+      const found = existing.find((entry) => entry.code && entry.code !== "0x");
+      if (found) {
+        setContract(found.address);
         setStatus(
           "A contract already exists at the expected address. Share it in the setup chat for verification; do not redeploy.",
         );
@@ -157,9 +165,19 @@ function Deployment() {
       setAddress(account);
       if ((await publicClient.getChainId()) !== robinhood.id)
         throw new Error("RPC network mismatch.");
+      assertDeploymentFactory(await publicClient.getCode({ address: factoryPlan.to }));
+      const existing = await publicClient.getCode({ address: factoryPlan.address });
+      if (existing && existing !== "0x") {
+        setContract(factoryPlan.address);
+        setStatus(
+          "The expected contract already exists. Share its address for source verification; do not deploy again.",
+        );
+        return;
+      }
       const gas = await publicClient.estimateGas({
         account,
-        data: encodeDeployData({ abi, bytecode, args }),
+        to: factoryPlan.to,
+        data: factoryPlan.data,
       });
       const price = await publicClient.getGasPrice();
       setEstimate(formatEther(gas * price));
@@ -198,8 +216,17 @@ function Deployment() {
         blockTag: "pending",
       });
       const nonce = requireUnusedDeploymentNonce(latest, pending, recovery?.nonce ?? latest);
-      const data = encodeDeployData({ abi, bytecode, args });
-      const gas = await publicClient.estimateGas({ account, data });
+      assertDeploymentFactory(await publicClient.getCode({ address: factoryPlan.to }));
+      const existing = await publicClient.getCode({ address: factoryPlan.address });
+      if (existing && existing !== "0x")
+        throw new Error(
+          "The expected contract already exists. Recover and verify it instead of deploying again.",
+        );
+      const gas = await publicClient.estimateGas({
+        account,
+        to: factoryPlan.to,
+        data: factoryPlan.data,
+      });
       const gasPrice = await publicClient.getGasPrice();
       setStatus("Checking the wallet connection. Keep Robinhood Wallet open on your iPhone…");
       await pingWifWallet(account);
@@ -207,7 +234,13 @@ function Deployment() {
       sent.current = true;
       localStorage.setItem(
         "wifaura-deployment-attempt",
-        JSON.stringify({ account, nonce, at: new Date().toISOString() }),
+        JSON.stringify({
+          account,
+          nonce,
+          kind: "factory",
+          address: factoryPlan.address,
+          at: new Date().toISOString(),
+        }),
       );
       setStatus("Sending the deployment request. Keep Robinhood Wallet open on your iPhone…");
       // Exactly one wallet request: no fallback RPC method or automatic resend.
@@ -216,7 +249,8 @@ function Deployment() {
         params: [
           {
             from: account,
-            data,
+            to: factoryPlan.to,
+            data: factoryPlan.data,
             chainId: numberToHex(robinhood.id),
             nonce: numberToHex(nonce),
             gas: numberToHex(gas + gas / 5n),
@@ -232,9 +266,23 @@ function Deployment() {
       setStatus("Transaction submitted. Waiting for the deployment receipt…");
       localStorage.setItem("wifaura-deployment-hash", tx);
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, timeout: 120000 });
-      if (receipt.status !== "success" || !receipt.contractAddress)
+      if (receipt.status !== "success")
         throw new Error("Deployment did not succeed. Check the transaction before retrying.");
-      setContract(receipt.contractAddress);
+      const deployedCode = await publicClient.getCode({ address: factoryPlan.address });
+      if (!deployedCode || deployedCode === "0x")
+        throw new Error(
+          "No contract appeared at the expected address. Check the transaction; do not resend.",
+        );
+      const [deployedToken, deployedTreasury] = await Promise.all([
+        publicClient.readContract({ address: factoryPlan.address, abi, functionName: "token" }),
+        publicClient.readContract({ address: factoryPlan.address, abi, functionName: "treasury" }),
+      ]);
+      if (
+        String(deployedToken).toLowerCase() !== WIF_TOKEN.toLowerCase() ||
+        String(deployedTreasury).toLowerCase() !== treasury.toLowerCase()
+      )
+        throw new Error("Deployed contract settings do not match. Do not enable payments.");
+      setContract(factoryPlan.address);
       setStatus(
         "Deployment receipt succeeded. Independent contract verification is still required.",
       );
@@ -265,6 +313,16 @@ function Deployment() {
         </p>
         <p>
           WIFAURA treasury: <span className="break-all">{treasury}</span>
+        </p>
+        <p>
+          Deployment calls an existing, code-verified factory with 0 ETH value; you pay only network
+          gas. Your wallet should show a contract call to{" "}
+          <span className="break-all">{factoryPlan.to}</span>.
+        </p>
+        <p>
+          Expected WIFAURA payment contract:{" "}
+          <span className="break-all">{factoryPlan.address}</span>. The factory does not own or
+          control the resulting payment contract.
         </p>
         <p>
           The contract sends 50% of each checkout to the collector’s separate Reserve and 50% to

@@ -1,5 +1,34 @@
 # Wallet-approved contract deployment
 
+## Current factory route
+
+Direct CREATE requests did not produce a wallet prompt even after message
+signing succeeded. This does not prove that Robinhood Wallet cannot deploy
+contracts; its observed handling of this request format remains unresolved.
+The setup page now makes an ordinary zero-value contract call to the existing
+Arachnid deterministic deployment proxy at
+`0x4e59b44847b379578588920cA78FbF26c0B4956C`. The exact runtime is checked against
+the published deployment bytecode before estimation and before sending.
+Source: https://github.com/Arachnid/deterministic-deployment-proxy
+
+Calldata is the fixed 32-byte WIFAURA salt followed by the same compiled
+payment constructor and unchanged token/treasury arguments. CREATE2 predicts
+`0x2d889Ff462B21177A4C2E6384D258eC867222D69` for the current mainnet build.
+No ETH value or WIF is sent to the factory. The resulting payment contract
+has no owner or upgrade hooks; the factory gains no control over it.
+
+Recovery checks both the old direct-CREATE address and the expected factory
+address. A retry retains the original sender nonce, so an old direct request
+and the factory retry cannot both be included. A factory-call receipt normally
+has no contractAddress field; the page checks code and token/treasury getters
+at the predicted address. Independent runtime verification remains required.
+
+`npm run contracts:factory-test` uses only a disposable local EVM. It checks
+exact runtime equality after immutable masking, constructor settings, CREATE2
+address prediction, duplicate deployment rejection and refusal of altered
+factory code. A mainnet eth_estimateGas call also succeeded; no mainnet
+transaction was sent by that simulation. The user must approve this new call.
+
 The `/deploy-payment` page is an owner setup utility, separate from checkout.
 It uses the same pinned compiler output as the local contract tests. The
 `prebuild` command regenerates its ABI and creation bytecode from source.
