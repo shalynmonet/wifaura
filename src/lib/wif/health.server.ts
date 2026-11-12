@@ -9,6 +9,23 @@ export function chainHealth() {
   return cached;
 }
 async function probe() {
+  if (process.env["WIFAURA_SPONSOR_RPC_ENABLED"] === "true") {
+    try {
+      const { paymentConfiguration } = await import("./rpc.server");
+      const { configuredProviders } = await import("./rpc-providers.server");
+      const cfg = await paymentConfiguration();
+      return {
+        privateConfigured: true,
+        state: "checkout-chain-verified",
+        chainVerified: true,
+        contractVerified: true,
+        providers: configuredProviders().map((p) => p.name),
+        head: (await cfg.client.getBlockNumber()).toString(),
+      };
+    } catch {
+      return { privateConfigured: true, state: "contract-check-failed", contractVerified: false };
+    }
+  }
   const privateConfigured = !!process.env["WIFAURA_PRIVATE_RPC_URL"];
   const url =
     process.env["WIFAURA_PRIVATE_RPC_URL"] ||

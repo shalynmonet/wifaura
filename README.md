@@ -18,6 +18,13 @@ it to the original NIMAURA project.
 Public source: https://github.com/shalynmonet/wifaura
 See [current deployment status](docs/DEPLOYMENT-STATUS.md) for live-service readiness.
 
+Server-side Robinhood Chain reads use QuickNode first, GetBlock as backup, and
+Alchemy as the final fallback. Each provider must report chain 4663 before it
+can supply payment evidence. Both sponsors independently verified the deployed
+contract and the finalized phone payment. Endpoint credentials stay in encrypted
+Cloudflare secrets; wallet transaction requests are never sent through this
+fallback mechanism. See [provider setup and evidence](docs/RPC-PROVIDERS.md).
+
 ```sh
 npm ci
 npm run typecheck

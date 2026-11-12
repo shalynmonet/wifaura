@@ -1,0 +1,22 @@
+{
+  "getblock": {
+    "provider": "getblock",
+    "configured": true,
+    "state": "verified",
+    "chainId": 4663,
+    "contractVerified": true,
+    "finalizedPaymentVerified": true,
+    "paymentHash": "0xee1a9c7b57ae4643da3d38e518ffb4fd11585cc8e88049a19e46514f74167be3",
+    "canonicalBlock": "112607099"
+  },
+  "quicknode": {
+    "provider": "quicknode",
+    "configured": true,
+    "state": "verified",
+    "chainId": 4663,
+    "contractVerified": true,
+    "finalizedPaymentVerified": true,
+    "paymentHash": "0xee1a9c7b57ae4643da3d38e518ffb4fd11585cc8e88049a19e46514f74167be3",
+    "canonicalBlock": "112607099"
+  }
+}

@@ -8,7 +8,7 @@ afterEach(() => {
 it("prefers the private server endpoint over the shared endpoint", () => {
   vi.stubEnv("WIFAURA_PRIVATE_RPC_URL", "https://private.example/v2/test-key");
   vi.stubEnv("WIFAURA_RPC_URL", "https://shared.example");
-  expect(chainClient().transport.url).toBe("https://private.example/v2/test-key");
+  expect(chainClient().transport["url"]).toBe("https://private.example/v2/test-key");
 });
 it("rejects an insecure private endpoint rather than falling back", () => {
   vi.stubEnv("WIFAURA_PRIVATE_RPC_URL", "http://private.example");

@@ -13,6 +13,13 @@ Reserve, and awaken a shared mystery together.
 
 **Categories:** consumer and payments; social and creators.
 
+**Sponsor infrastructure:** QuickNode supplies primary server-side Robinhood
+Chain reads; GetBlock supplies backup reads, with Alchemy as the final fallback.
+Both sponsors independently verified the deployed contract and the finalized
+iPhone payment. Chain ID is checked before accepting provider reads, endpoint
+credentials remain encrypted on the server, and wallet transactions never use
+read fallback. See docs/RPC-PROVIDERS.md and deployments/rpc-providers.json.
+
 **What it does:** Each day's sealed entity offers four intentions that shape a
 private, reproducible artwork and encounter. Complimentary credits introduce
 the ritual. Further encounters cost $1 USD equivalent in WIF on Robinhood Chain,

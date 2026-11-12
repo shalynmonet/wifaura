@@ -2,6 +2,16 @@
 
 Updated November 12, 2026.
 
+Sponsor RPC integration is live on Pages deployment
+`70d2484e.wifaura.pages.dev`: QuickNode primary, GetBlock backup, Alchemy final
+fallback. Both sponsors independently passed pinned-contract and finalized
+phone-payment verification at block 112607099. Active checkout configuration
+and fresh pricing passed after deployment (16:26 UTC). Fifteen targeted RPC,
+verification and health tests, type checking, lint and production build passed.
+Credentials remain encrypted Cloudflare Pages Production secrets. Wallet sends
+never use read fallback. See [provider integration](RPC-PROVIDERS.md) and
+[public verification evidence](../deployments/rpc-providers.json).
+
 WIFAURA is live at https://wifaura.sha-i.com on Cloudflare Pages. Source is public
 at https://github.com/shalynmonet/wifaura. The owner approved opening paid checkout
 after the complete iPhone payment test passed. Verified payer and separate Reserve

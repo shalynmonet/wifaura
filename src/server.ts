@@ -50,6 +50,16 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const providerMatch = new URL(request.url).pathname.match(
+        /^\/api\/rpc-providers\/(quicknode|getblock|alchemy)$/,
+      );
+      if (providerMatch && request.method === "GET") {
+        const { providerHealth } = await import("./lib/wif/provider-health.server");
+        return Response.json(
+          await providerHealth(providerMatch[1] as "quicknode" | "getblock" | "alchemy"),
+          { headers: { "cache-control": "public, max-age=60" } },
+        );
+      }
       if (new URL(request.url).pathname === "/api/price-health" && request.method === "GET") {
         const { priceHealth } = await import("./lib/wif/price-health.server");
         return Response.json(await priceHealth(), {
