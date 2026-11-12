@@ -50,6 +50,12 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      if (new URL(request.url).pathname === "/api/price-health" && request.method === "GET") {
+        const { priceHealth } = await import("./lib/wif/price-health.server");
+        return Response.json(await priceHealth(), {
+          headers: { "cache-control": "public, max-age=30" },
+        });
+      }
       if (new URL(request.url).pathname === "/api/chain-health" && request.method === "GET") {
         const { chainHealth } = await import("./lib/wif/health.server");
         return Response.json(await chainHealth(), {

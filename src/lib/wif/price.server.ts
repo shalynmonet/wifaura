@@ -47,14 +47,31 @@ const marketSchema = z.object({
 
 export async function liveDollarWifQuote(decimals: number, request: typeof fetch = fetch) {
   const start = Date.now();
-  const response = await request(WIF_PRICE_SOURCE, {
-    redirect: "manual",
-    cache: "no-store",
-    signal: AbortSignal.timeout(8000),
-    headers: { Accept: "application/json", "User-Agent": "WIFAURA/1.0 live-USD-quote" },
-  });
-  if (!response.ok || response.status !== 200)
-    throw new Error("Live WIF price unavailable. Please try later.");
+  let response: Response | undefined;
+  const unavailable = () =>
+    new Error(
+      "Live WIF price temporarily unavailable. Request a fresh quote later; do not send a payment. Existing wallet approval is preserved.",
+    );
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const remaining = 9750 - (Date.now() - start);
+    if (remaining <= 0) throw unavailable();
+    try {
+      response = await request(WIF_PRICE_SOURCE, {
+        redirect: "manual",
+        cache: "no-store",
+        signal: AbortSignal.timeout(Math.min(8000, remaining)),
+        headers: { Accept: "application/json", "User-Agent": "WIFAURA/1.0 live-USD-quote" },
+      });
+    } catch {
+      response = undefined;
+    }
+    if (response?.status === 200) break;
+    const transient = !response || [408, 500, 502, 503, 504].includes(response.status);
+    if (!transient || attempt === 1) throw unavailable();
+    await response?.body?.cancel();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  if (!response || !response.ok || response.status !== 200) throw unavailable();
   const now = Date.now();
   const providerTime = Date.parse(response.headers.get("date") || "");
   const ageHeader = response.headers.get("age");

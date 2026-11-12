@@ -65,7 +65,38 @@ it("rejects stale, undated, cached and redirected rates instead of using a remem
   await expect(liveDollarWifQuote(18, mock(pair, {}, 302))).rejects.toThrow(/unavailable/);
   await expect(
     liveDollarWifQuote(18, vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"))),
-  ).rejects.toThrow(/offline/);
+  ).rejects.toThrow(/temporarily unavailable/);
+});
+it("recovers one transient provider failure using only a newly fetched validated price", async () => {
+  const request = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(new Response("upstream unavailable", { status: 503 }))
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ pairs: [pair] }), {
+        status: 200,
+        headers: { date: new Date().toUTCString() },
+      }),
+    );
+  expect((await liveDollarWifQuote(18, request)).rate).toBe(pair.priceUsd);
+  expect(request).toHaveBeenCalledTimes(2);
+});
+it("does not retry blocked or throttled requests and never accepts a stale retry", async () => {
+  for (const status of [403, 429]) {
+    const request = mock(pair, { date: new Date().toUTCString() }, status);
+    await expect(liveDollarWifQuote(18, request)).rejects.toThrow(/unavailable/);
+    expect(request).toHaveBeenCalledTimes(1);
+  }
+  const request = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(new Response("offline", { status: 502 }))
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ pairs: [pair] }), {
+        status: 200,
+        headers: { date: new Date(Date.now() - 120000).toUTCString() },
+      }),
+    );
+  await expect(liveDollarWifQuote(18, request)).rejects.toThrow(/stale/);
+  expect(request).toHaveBeenCalledTimes(2);
 });
 it("rejects wrong chains, impostor tokens, alternate pools, illiquid and inactive markets", async () => {
   for (const invalid of [
