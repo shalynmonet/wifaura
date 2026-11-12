@@ -36,6 +36,20 @@ it("rejects a different phone payer before asking the wallet to send", async () 
   await expect(payWif(checkout)).rejects.toThrow(`This quote requires payer ${checkout.sender}`);
   expect(request.mock.calls.some(([call]) => call.method === "eth_sendTransaction")).toBe(false);
 });
+it("asks phone users to connect one account rather than silently choosing the first authorized account", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const { getWifProvider, connectWifWallet } = await import("./wallet");
+  await getWifProvider(true);
+  mock.request.mockImplementation(async ({ method }: { method: string }) =>
+    method === "eth_chainId" ? 4663 : [checkout.sender, checkout.reserve],
+  );
+  await expect(connectWifWallet()).rejects.toThrow("Choose only one wallet account");
+  expect(
+    mock.request.mock.calls.some(
+      ([r]) => r.method === "personal_sign" || r.method === "eth_sendTransaction",
+    ),
+  ).toBe(false);
+});
 it("keeps approval and payment on the authorized chain after mobile app default-network changes", async () => {
   vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
   const { getWifProvider, approveWif, payWif } = await import("./wallet");

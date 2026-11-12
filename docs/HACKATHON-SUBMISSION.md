@@ -4,8 +4,7 @@ Status: prepared locally; not submitted. The app is live at
 https://wifaura.sha-i.com and source is public at
 https://github.com/shalynmonet/wifaura. Contract
 `0x2d889Ff462B21177A4C2E6384D258eC867222D69` is deployed and source-verified.
-Real WIF checkout evidence and the demo video remain pending; deployment
-alone does not demonstrate the required WIF utility.
+A real iPhone checkout is finalized and verified, including equal Reserve and treasury transfers, one collectible and one Collective contribution. Evidence: deployments/phone-checkout.json. The demo video and actual submission remain pending.
 
 **Name:** WIFAURA
 
@@ -62,3 +61,4 @@ we awaken hidden entities, one collective milestone at a time.”
 
 55–60s: Show the live URL and source link. Use recorded evidence from the
 approved production test; do not substitute simulated purchases.
+

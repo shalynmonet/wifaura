@@ -15,8 +15,10 @@
   "finalized": true,
   "sourceVerified": true,
   "paymentsEnabled": true,
-  "realCheckoutVerified": false,
+  "realCheckoutVerified": true,
   "canonicalReceiptVerified": true,
   "finalityVerification": "Canonical receipt block hash, finalized checkpoint covers inclusion, current immutable runtime matches pinned source. Public RPC does not provide historical finalized state.",
-  "testPayerRestriction": "0xb6B05f072A361d149095f03FA904B544d7d1418f"
+  "testPayerRestriction": null,
+  "phoneCheckoutVerified": true,
+  "publicPaidCheckoutEnabled": true
 }

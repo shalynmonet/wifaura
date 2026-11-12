@@ -11,7 +11,7 @@ Cloudflare Pages at `https://wifaura.pages.dev`. Squarespace retains DNS.
 See [the single-record DNS setup](docs/CUSTOM-DOMAIN.md).
 
 The payment contract is deployed and source-verified; its runtime hash and
-protected server key are configured. Wallet setup is open. Paid checkout is restricted to the verified launch-test payer pending real-payment acceptance testing; deployment is finalized.
+protected server key are configured. The complete iPhone checkout passed: finalized WIF payment, equal Reserve/treasury transfers, one collectible and one Collective contribution. Paid checkout is open to verified collectors following owner approval.
 WIFAURA uses a separate backend and deployment; never connect
 it to the original NIMAURA project.
 
@@ -37,4 +37,5 @@ Configure a separate backend using `.env.example` before running `npm run dev`.
 No remote creation, deployment, real transaction or submission is authorized by
 running local tests. Obtain the owner's approval for each external change.
 The original MIT attribution is retained in `LICENSE`.
+
 

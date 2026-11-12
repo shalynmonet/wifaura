@@ -241,7 +241,12 @@ export async function connectWifWallet(forceWalletConnect = false) {
       await client.switchChain({ id: robinhood.id });
     }
   }
-  const [address] = await client.requestAddresses();
+  const addresses = await client.requestAddresses();
+  if (selectedProvider === walletConnectProvider && addresses.length > 1)
+    throw new Error(
+      "Choose only one wallet account for this connection. Use Change wallet or account, reconnect, and select just the paying or Reserve account you want to verify.",
+    );
+  const [address] = addresses;
   if (!address) throw new Error("No wallet account selected.");
   if ((await client.getChainId()) !== robinhood.id)
     throw new Error("Select Robinhood Chain in your wallet.");
