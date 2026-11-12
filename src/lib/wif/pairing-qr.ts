@@ -20,7 +20,7 @@ export function pairingQr(uri: string, cancel: () => void) {
   const mobile = mobileWalletDevice();
   text.textContent = mobile
     ? "Choose the app holding your paying wallet, approve the connection in the app, then return to this browser tab. Keep this tab open."
-    : "Open Robinhood Wallet on your phone → Web3 → the scanner beside Search. Scan this code and approve the connection. Keep this page open on your computer.";
+    : "Open your wallet app's WalletConnect scanner on your phone. Scan this code and approve the connection. Keep this page open on your computer.";
   const openWallet = document.createElement("a");
   openWallet.textContent = "Open Robinhood Wallet";
   openWallet.href = robinhoodPairingLink(uri);
@@ -32,7 +32,7 @@ export function pairingQr(uri: string, cancel: () => void) {
   metamask.style.cssText = openWallet.style.cssText;
   const help = document.createElement("p");
   help.textContent =
-    "If the app does not open, make sure Robinhood Wallet is installed and open WIFAURA in Safari or Chrome.";
+    "If the app does not open, make sure the wallet app you selected is installed and open WIFAURA in Safari or Chrome.";
   help.style.cssText = "font-size:13px;margin-bottom:12px";
   const qr = document.createElement("details");
   qr.open = !mobile;

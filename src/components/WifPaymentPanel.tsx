@@ -69,7 +69,6 @@ function ActiveWifPaymentPanel({
   const [approvalRequested, setApprovalRequested] = useState(false);
   useEffect(() => {
     setApproved(false);
-    setWalletChecked(false);
     setApprovalRequested(false);
   }, [q?.id]);
   const [busy, setBusy] = useState(false),

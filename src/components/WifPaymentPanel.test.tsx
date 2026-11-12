@@ -85,6 +85,8 @@ it("allows a verified launch payer to request a quote", async () => {
   await waitFor(() => expect(button).not.toBeDisabled());
   fireEvent.click(button);
   await waitFor(() => expect(m.quote).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(screen.getByText("1. Approve exact WIF amount")).not.toBeDisabled());
+  expect(screen.getByText("2. Pay and unseal")).toBeDisabled();
   expect(m.pay).not.toHaveBeenCalled();
 });
 it("shows a clear rate-limit message without suggesting another payment", async () => {
