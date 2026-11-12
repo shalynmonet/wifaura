@@ -32,9 +32,26 @@ export function chainClient() {
         try {
           return await base.request(...args);
         } catch (error) {
-          const message = error instanceof Error ? error.message : "";
+          let cause: unknown = error;
+          let throttled = false;
+          for (let depth = 0; depth < 10 && cause && typeof cause === "object"; depth++) {
+            const entry = cause as {
+              status?: unknown;
+              code?: unknown;
+              message?: unknown;
+              cause?: unknown;
+            };
+            if (
+              entry.status === 429 ||
+              entry.code === 429 ||
+              (typeof entry.message === "string" &&
+                entry.message.startsWith("Robinhood Chain is busy."))
+            )
+              throttled = true;
+            cause = entry.cause;
+          }
           throw new Error(
-            /429|Too Many Requests|Chain is busy/i.test(message)
+            throttled
               ? "Robinhood Chain is busy. Wait one minute, then check again. Do not resend a pending payment."
               : "Unable to read Robinhood Chain. Check again later; do not resend a pending payment.",
           );
@@ -44,7 +61,7 @@ export function chainClient() {
     },
   });
 }
-export async function paymentConfiguration() {
+export async function paymentConfiguration(onStage?: (stage: string) => void) {
   if (process.env["WIFAURA_PAYMENTS_ENABLED"] !== "true")
     throw new Error("WIF payments await deployment and verification.");
   const router = process.env["WIFAURA_PAYMENT_CONTRACT"] || "";
@@ -52,8 +69,10 @@ export async function paymentConfiguration() {
   if (!isAddress(router) || !isAddress(treasury))
     throw new Error("Payment contract and treasury are not configured.");
   const client = chainClient();
+  onStage?.("chain-id");
   if ((await client.getChainId()) !== robinhood.id) throw new Error("Wrong verification chain.");
   const expectedCodeHash = process.env["WIFAURA_ROUTER_CODE_HASH"];
+  onStage?.("contract-code");
   const code = await client.getCode({ address: getAddress(router) });
   if (
     !code ||
@@ -61,11 +80,24 @@ export async function paymentConfiguration() {
     keccak256(code).toLowerCase() !== expectedCodeHash.toLowerCase()
   )
     throw new Error("Payment contract bytecode has not been verified and pinned.");
-  const [token, destination, decimals] = await Promise.all([
-    client.readContract({ address: getAddress(router), abi: paymentAbi, functionName: "token" }),
-    client.readContract({ address: getAddress(router), abi: paymentAbi, functionName: "treasury" }),
-    client.readContract({ address: WIF_TOKEN, abi: erc20Abi, functionName: "decimals" }),
-  ]);
+  onStage?.("contract-token");
+  const token = await client.readContract({
+    address: getAddress(router),
+    abi: paymentAbi,
+    functionName: "token",
+  });
+  onStage?.("contract-treasury");
+  const destination = await client.readContract({
+    address: getAddress(router),
+    abi: paymentAbi,
+    functionName: "treasury",
+  });
+  onStage?.("token-decimals");
+  const decimals = await client.readContract({
+    address: WIF_TOKEN,
+    abi: erc20Abi,
+    functionName: "decimals",
+  });
   if (
     token.toLowerCase() !== WIF_TOKEN.toLowerCase() ||
     destination.toLowerCase() !== treasury.toLowerCase()

@@ -50,6 +50,12 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      if (new URL(request.url).pathname === "/api/chain-health" && request.method === "GET") {
+        const { chainHealth } = await import("./lib/wif/health.server");
+        return Response.json(await chainHealth(), {
+          headers: { "cache-control": "public, max-age=60" },
+        });
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

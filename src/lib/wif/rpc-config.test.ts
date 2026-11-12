@@ -15,11 +15,12 @@ it("rejects an insecure private endpoint rather than falling back", () => {
   expect(() => chainClient()).toThrow("HTTPS chain RPC required");
 });
 it("keeps the private endpoint key out of chain read failures", async () => {
-  vi.stubEnv("WIFAURA_PRIVATE_RPC_URL", "https://failure.example/v2/do-not-expose-this-key");
+  vi.stubEnv("WIFAURA_PRIVATE_RPC_URL", "https://failure.example/v2/do-not-expose-this-key-429");
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("unavailable", { status: 503 })));
   const result = await chainClient()
     .getChainId()
     .catch((error) => error.message as string);
   expect(result).toContain("Unable to read Robinhood Chain");
   expect(result).not.toContain("do-not-expose-this-key");
+  expect(result).not.toContain("Chain is busy");
 });
