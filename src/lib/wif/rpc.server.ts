@@ -9,13 +9,19 @@ import {
   type Hash,
 } from "viem";
 import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
+import { rpcFetch } from "./rpc-fetch.server";
 
 export function chainClient() {
   const url = process.env["WIFAURA_RPC_URL"] || robinhood.rpcUrls.default.http[0];
   if (new URL(url).protocol !== "https:") throw new Error("HTTPS chain RPC required.");
   return createPublicClient({
     chain: robinhood,
-    transport: http(url, { timeout: 12_000, retryCount: 0, fetchOptions: { redirect: "manual" } }),
+    transport: http(url, {
+      timeout: 12_000,
+      retryCount: 0,
+      fetchFn: rpcFetch(url),
+      fetchOptions: { redirect: "manual" },
+    }),
   });
 }
 export async function paymentConfiguration() {

@@ -14,6 +14,14 @@ import { type WifQuote } from "@/lib/wif/config";
 import type { Intention } from "@/lib/manifest";
 import { paymentTestAccess } from "@/lib/wif/test-access";
 
+function paymentError(error: unknown) {
+  const message =
+    error instanceof Error ? error.message : "Request unresolved. Check payment status.";
+  return /429|Too Many Requests|Chain is busy/i.test(message)
+    ? "Robinhood Chain is busy. Wait one minute, then check again. Do not resend a pending payment."
+    : message;
+}
+
 export function WifPaymentPanel(props: {
   dropId: string;
   intention: Intention | null;
@@ -74,7 +82,7 @@ function ActiveWifPaymentPanel({
         }
       })
       .catch((e) => {
-        if (active) setMessage(e.message);
+        if (active) setMessage(paymentError(e));
       });
     return () => {
       active = false;
@@ -87,7 +95,7 @@ function ActiveWifPaymentPanel({
     try {
       await action();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Request unresolved. Check payment status.");
+      setMessage(paymentError(e));
     } finally {
       lock.current = false;
       setBusy(false);

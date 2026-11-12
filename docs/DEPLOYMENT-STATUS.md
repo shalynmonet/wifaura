@@ -61,3 +61,6 @@ same time. A demo video and actual WIF payment evidence remain outstanding.
 No hackathon submission has been made.
 
 
+
+RPC handling: contract and receipt reads are serialized at one-second intervals per Worker instance and endpoint. A 429 response starts at least a one-minute cooldown, respecting longer Retry-After values. No request is automatically resent. Independent Worker instances do not share this in-memory queue; an authenticated RPC remains an option if public limits persist. The paced transport passed live chain, code-hash, token, treasury, decimals and head reads. Twelve targeted tests cover pacing, cooldown, receipt verification and checkout errors.
+

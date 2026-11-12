@@ -72,6 +72,15 @@ it("allows a verified launch payer to request a quote", async () => {
   await waitFor(() => expect(m.quote).toHaveBeenCalledTimes(1));
   expect(m.pay).not.toHaveBeenCalled();
 });
+it("shows a clear rate-limit message without suggesting another payment", async () => {
+  m.account.mockRejectedValue(
+    new Error("RPC Request failed. Status: 429 Request body: private-debug-details"),
+  );
+  render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
+  await screen.findByText(/Robinhood Chain is busy/);
+  expect(screen.queryByText(/private-debug-details/)).toBeNull();
+  expect(m.pay).not.toHaveBeenCalled();
+});
 it("opens only one wallet payment when clicked twice", async () => {
   render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
   const button = await screen.findByText("2. Pay and unseal");
