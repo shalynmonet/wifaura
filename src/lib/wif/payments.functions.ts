@@ -89,6 +89,7 @@ export const quoteWif = createServerFn({ method: "POST" })
     const { paymentConfiguration } = await import("./rpc.server");
     const { wifStore } = await import("./store.server");
     const { liveDollarWifQuote } = await import("./price.server");
+    const { marketRequest } = await import("./market-request.server");
     const db = wifStore();
     const allowed = process.env["WIFAURA_TEST_PAYER"];
     if (allowed) {
@@ -102,7 +103,7 @@ export const quoteWif = createServerFn({ method: "POST" })
         throw new Error("Paid checkout is currently limited to the verified launch-test wallet.");
     }
     const cfg = await paymentConfiguration();
-    const pricing = await liveDollarWifQuote(cfg.decimals);
+    const pricing = await liveDollarWifQuote(cfg.decimals, marketRequest);
     const seed = newSeed();
     const result = await db.rpc("wif_create_quote", {
       _user: context.userId,

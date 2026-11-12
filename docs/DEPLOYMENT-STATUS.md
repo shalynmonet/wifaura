@@ -1,6 +1,6 @@
 # Deployment status
 
-Updated November 11, 2026.
+Updated November 12, 2026.
 
 WIFAURA is live at https://wifaura.sha-i.com on Cloudflare Pages. Public source:
 https://github.com/shalynmonet/wifaura. Google sign-in works, confirmed by the
@@ -82,4 +82,8 @@ Phone acceptance follow-up: MetaMask restored the correct payer, but the phone s
 
 
 Live pricing follow-up: the owner reported an unavailable quote after the phone connection passed. The pinned pool responded locally with HTTP 200, liquidity above the threshold and recent trading. The deployed /api/price-health probe also returned available, HTTP 200 and a fresh rate; the earlier failure's exact cause is unproven. Pricing now retries one transient network/408/5xx read within the existing ten-second budget. It never retries 403/429/redirects, reuses a stored rate, relaxes freshness or changes pool/token/liquidity/activity checks. Seven targeted price/health tests passed and the build completed. The read-only probe accepts no input and caches diagnostic output for 30 seconds; checkout always fetches fresh data. Independent public-chain observation at 2026-11-12T14:06:24Z: payer WIF 1039815401195387450366 base units, Reserve 0, treasury 0, allowance 0. Earlier user-reported approval confirmation therefore is not treated as current spending authorization. Real payment and finality verification remain outstanding.
+
+
+
+Pricing relay resolution: production subsequently returned provider-rate-limit / HTTP 429 on the direct DEX Screener connection, confirming a real server-side limit. Deployed protected wif-market Edge Function v2 only to WIFAURA project bvnjosopyjblugshdbwd. It uses @supabase/server 1.9.2 auth secret:* with the existing encrypted server key; unauthenticated GET returned 401. The function accepts only fixed-source GET without query parameters, makes no database calls, stores no prices and preserves upstream Date/Age. Cloudflare's market transport pins the separate backend, never forwards its credential upstream, refuses redirects and restores the provider's original timestamp for all normal quote validation. 403/429 remain non-retryable. Ten initial targeted tests plus the additional upstream-throttling test passed; type checks and build passed. Activated on Pages release f3eb3758. Production returned fresh validated rates at 14:18:07Z and 14:19:54Z. Phone quote confirmation and real payment are still pending. No live quote is created from diagnostic cache.
 

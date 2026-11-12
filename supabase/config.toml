@@ -1,1 +1,5 @@
 project_id = "wifaura"
+
+# Authenticated service-to-service API key check is performed by withSupabase.
+[functions.wif-market]
+verify_jwt = false

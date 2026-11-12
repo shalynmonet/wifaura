@@ -1,4 +1,5 @@
 import { liveDollarWifQuote } from "./price.server";
+import { marketRequest } from "./market-request.server";
 let cached: Promise<unknown> | undefined;
 let until = 0;
 export function priceHealth() {
@@ -7,7 +8,7 @@ export function priceHealth() {
   cached = probePrice();
   return cached;
 }
-export async function probePrice(request: typeof fetch = fetch) {
+export async function probePrice(request: typeof fetch = marketRequest) {
   let status: number | null = null;
   let challenged = false;
   try {
