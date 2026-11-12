@@ -1,0 +1,16 @@
+{
+  "publicUrl": "https://wifaura.sha-i.com",
+  "deploymentId": "45f81136-640e-4637-b6a9-4d377db5d705",
+  "sourceCommit": "41f3f68",
+  "paidCheckoutEnabled": true,
+  "testPayerRestriction": false,
+  "googleSignInEnabled": true,
+  "signupDisabled": false,
+  "freshPriceProbePassed": true,
+  "phoneCheckoutAccepted": true,
+  "verifiedSecretTypes": {
+    "SUPABASE_SECRET_KEY": "secret_text",
+    "WIFAURA_PRIVATE_RPC_URL": "secret_text"
+  },
+  "verifiedAt": "2026-11-12T15:19:26.0067023+00:00"
+}

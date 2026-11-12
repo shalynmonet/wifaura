@@ -82,3 +82,6 @@ video remains outstanding. Official event data checked November 12 gives a
 submission deadline of 17:30 UTC / 11:30 a.m. Chicago today, with the final ending
 November 16 at the same time. Sources: https://worldisflat.fun/build/rules and
 https://worldisflat.fun/build/api/event.
+
+Public launch verified: Pages deployment 45f81136-640e-4637-b6a9-4d377db5d705, paid-checkout flag true, empty test-payer restriction, Google enabled, signup enabled, both protected settings still encrypted, primary HTTPS status 200 and fresh pricing available. Thirty targeted public-access/wallet/onboarding/checkout tests plus type checks and build passed. See deployments/public-launch.json.
+
