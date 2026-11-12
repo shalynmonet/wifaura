@@ -73,11 +73,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "WIFAURA — Unseal the unseen" },
       { name: "description", content: "A daily generative-art unsealing ritual that saves for your future. A Robinhood Chain experience." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://wifaura.sha-i.com/wifaura-logo.jpg" },
+      { name: "twitter:image", content: "https://wifaura.sha-i.com/wifaura-logo.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/wifaura-logo.jpg", type: "image/jpeg" },
+      { rel: "apple-touch-icon", href: "/wifaura-logo.jpg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
