@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 
-const mock = vi.hoisted(() => ({ init: vi.fn(), connect: vi.fn(), on: vi.fn() }));
+const mock = vi.hoisted(() => ({ init: vi.fn(), connect: vi.fn(), on: vi.fn(), ping: vi.fn() }));
 vi.mock("@walletconnect/universal-provider", () => ({ UniversalProvider: { init: mock.init } }));
 vi.mock("./pairing-qr", () => ({ pairingQr: vi.fn(() => vi.fn()) }));
 beforeEach(() => {
@@ -8,15 +8,19 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("window", {});
   const provider = {
-    session: undefined as undefined | { namespaces: { eip155: { accounts: string[] } } },
+    session: undefined as
+      undefined | { topic: string; namespaces: { eip155: { accounts: string[] } } },
+    client: { ping: mock.ping },
     connect: mock.connect,
     on: mock.on,
     removeListener: vi.fn(),
     setDefaultChain: vi.fn(),
   };
   mock.init.mockResolvedValue(provider);
+  mock.ping.mockResolvedValue(undefined);
   mock.connect.mockImplementation(async () => {
     provider.session = {
+      topic: "test-session",
       namespaces: {
         eip155: { accounts: ["eip155:4663:0x1111111111111111111111111111111111111111"] },
       },
@@ -24,6 +28,7 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
@@ -92,4 +97,32 @@ it("rejects a restored session that does not authorize Robinhood Chain", async (
   const { getWifProvider } = await import("./wallet");
   await expect(getWifProvider(true)).rejects.toThrow(/did not authorize Robinhood Chain/);
   expect(mock.connect).not.toHaveBeenCalled();
+});
+it("recovery closes the old session without pairing or requesting a signature", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const disconnect = vi.fn().mockResolvedValue(undefined);
+  const request = vi.fn();
+  mock.init.mockResolvedValue({ session: { namespaces: {} }, disconnect, request });
+  const { disconnectWifSession } = await import("./wallet");
+  await disconnectWifSession();
+  expect(disconnect).toHaveBeenCalledOnce();
+  expect(request).not.toHaveBeenCalled();
+  expect(mock.connect).not.toHaveBeenCalled();
+});
+it("checks the wallet session before requesting a transaction", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const { getWifProvider, pingWifWallet } = await import("./wallet");
+  await getWifProvider(true);
+  await pingWifWallet();
+  expect(mock.ping).toHaveBeenCalledWith({ topic: "test-session" });
+});
+it("stops waiting for an unreachable wallet without sending a transaction", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const { getWifProvider, pingWifWallet } = await import("./wallet");
+  await getWifProvider(true);
+  mock.ping.mockReturnValue(new Promise(() => {}));
+  vi.useFakeTimers();
+  const check = expect(pingWifWallet()).rejects.toThrow(/No deployment was requested/);
+  await vi.advanceTimersByTimeAsync(12000);
+  await check;
 });

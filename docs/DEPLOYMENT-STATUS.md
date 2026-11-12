@@ -4,15 +4,25 @@ Updated November 11, 2026.
 
 Owner setup is published at `/deploy-payment`: a WalletConnect QR pairing flow
 for Robinhood Wallet, followed by a read-only gas estimate and a separate
-explicit deployment consent. Build, type checks and five wallet unit tests
-passed. No contract deployment or real transaction has been performed. Actual
-phone pairing is still required. See `CONTRACT-SETUP.md`.
+explicit deployment consent. Phone pairing and gas estimation succeeded;
+contract deployment and a real WIF checkout remain unverified. See
+`CONTRACT-SETUP.md`.
 
-The owner saved `SUPABASE_SECRET_KEY` as a secret on the earlier Worker.
-The live custom-domain Pages project still needs its own Production secret.
+The owner saved `SUPABASE_SECRET_KEY` as an encrypted Production secret on
+the live custom-domain Pages project; verified through the Cloudflare API.
+The same name also exists on the earlier Worker.
 These are separate Cloudflare targets despite both being named wifaura:
 `/workers/services/view/wifaura/production/settings` is the fallback;
 `/pages/view/wifaura/settings/production` is the active Pages project.
+
+Real Robinhood Wallet QR pairing and gas estimation succeeded. The owner
+funded its address on chain 4663 with 0.0024 ETH. The first deployment request
+became stuck without a wallet prompt, then the owner refreshed. At the last
+read-only check, confirmed and pending outgoing counts were both zero.
+Recovery now checks for an existing contract/nonce, closes the old session,
+and retains the original nonce for any separately approved retry. A 12-second
+wallet ping precedes the single send request. Ten targeted tests, type checks,
+and production builds passed. Contract deployment remains unverified.
 
 The owner-approved privacy policy is available at `/privacy`, linked from the
 shared application footer. Google Branding should use the primary homepage

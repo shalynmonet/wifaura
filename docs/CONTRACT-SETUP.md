@@ -21,6 +21,16 @@ It uses the same pinned compiler output as the local contract tests. The
    activity and reconcile the deployment before clearing browser state or
    trying from another device. A saved transaction hash is displayed when
    available. This browser record is a convenience, not onchain evidence.
+   Use Recover previous deployment connection after a stuck request. It checks
+   the expected contract address and confirmed/pending outgoing counts, closes
+   the old WalletConnect session, then rechecks before unlocking a separately
+   approved retry. The original nonce is retained, so a delayed original
+   broadcast and a retry cannot create two contracts. Legacy attempts without
+   a nonce can recover only at unused nonce zero. Existing code or an outgoing
+   transaction blocks resending. Recovery never submits a transaction.
+   Before sending, a 12-second session ping checks wallet reachability. The
+   deployment uses one explicit eth_sendTransaction request, a pinned nonce,
+   and estimated gas with a 20% gas-limit buffer; there is no fallback send.
 5. Give the public transaction hash and contract address to the setup process.
    A successful receipt alone does not enable payments. Run the independent
    deployment source/getter/code-hash checks, verify explorer source, configure

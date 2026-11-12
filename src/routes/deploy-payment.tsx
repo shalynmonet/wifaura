@@ -6,12 +6,21 @@ import {
   custom,
   encodeDeployData,
   formatEther,
+  getContractAddress,
+  isAddress,
+  numberToHex,
   http,
   type Abi,
 } from "viem";
 import { AppShell } from "@/components/AppShell";
 import { robinhood, WIF_TOKEN } from "@/lib/wif/config";
-import { connectWifWallet, getWifProvider } from "@/lib/wif/wallet";
+import {
+  connectWifWallet,
+  disconnectWifSession,
+  getWifProvider,
+  pingWifWallet,
+} from "@/lib/wif/wallet";
+import { requireUnusedDeploymentNonce } from "@/lib/wif/deployment-recovery";
 import artifact from "@/lib/wif/deployment-artifact.json";
 
 const treasury = "0x1fbe8ca7ab3bb424520972b6e27c0130f4971985" as const;
@@ -37,8 +46,75 @@ function Deployment() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [approved, setApproved] = useState(false);
+  const [status, setStatus] = useState("");
   const inFlight = useRef(false);
   const sent = useRef(false);
+  async function recover() {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setBusy(true);
+    setError("");
+    setApproved(false);
+    try {
+      const stored = localStorage.getItem("wifaura-deployment-attempt");
+      if (!stored) {
+        if (sent.current)
+          throw new Error(
+            "Deployment attempt data is unavailable. Check wallet activity before continuing.",
+          );
+        await disconnectWifSession();
+        setAddress(undefined);
+        setEstimate(undefined);
+        setStatus(
+          "Wallet connection closed without sending a transaction. Connect again to create a fresh connection.",
+        );
+        return;
+      }
+      const attempt = JSON.parse(stored) as { account: string; nonce?: number };
+      if (!isAddress(attempt.account)) throw new Error("Stored wallet address is invalid.");
+      const nonce = attempt.nonce ?? 0;
+      const candidate = getContractAddress({ from: attempt.account, nonce: BigInt(nonce) });
+      if ((await publicClient.getChainId()) !== robinhood.id)
+        throw new Error("RPC network mismatch.");
+      const code = await publicClient.getCode({ address: candidate });
+      if (code && code !== "0x") {
+        setContract(candidate);
+        setStatus(
+          "A contract already exists at the expected address. Share it in the setup chat for verification; do not redeploy.",
+        );
+        return;
+      }
+      const before = await Promise.all([
+        publicClient.getTransactionCount({ address: attempt.account, blockTag: "latest" }),
+        publicClient.getTransactionCount({ address: attempt.account, blockTag: "pending" }),
+      ]);
+      requireUnusedDeploymentNonce(before[0], before[1], nonce);
+      setStatus("Closing the old wallet connection. No transaction is being sent…");
+      await disconnectWifSession();
+      const after = await Promise.all([
+        publicClient.getTransactionCount({ address: attempt.account, blockTag: "latest" }),
+        publicClient.getTransactionCount({ address: attempt.account, blockTag: "pending" }),
+      ]);
+      requireUnusedDeploymentNonce(after[0], after[1], nonce);
+      localStorage.setItem(
+        "wifaura-deployment-recovery",
+        JSON.stringify({ account: attempt.account, nonce }),
+      );
+      localStorage.removeItem("wifaura-deployment-attempt");
+      localStorage.removeItem("wifaura-deployment-hash");
+      sent.current = false;
+      setAddress(undefined);
+      setEstimate(undefined);
+      setStatus(
+        "No outgoing transaction was found. The old connection is closed. Connect again, then review deployment separately. A retry will reuse the original transaction nonce to prevent duplicate deployment.",
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+      inFlight.current = false;
+    }
+  }
   async function prepare() {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -86,19 +162,60 @@ function Deployment() {
         (await wallet.getChainId()) !== robinhood.id
       )
         throw new Error("Account or network changed. Connect and estimate again.");
+      const recovery = JSON.parse(
+        localStorage.getItem("wifaura-deployment-recovery") || "null",
+      ) as { account: string; nonce: number } | null;
+      if (recovery && recovery.account.toLowerCase() !== account.toLowerCase())
+        throw new Error("Reconnect the original deployment wallet.");
+      const latest = await publicClient.getTransactionCount({
+        address: account,
+        blockTag: "latest",
+      });
+      const pending = await publicClient.getTransactionCount({
+        address: account,
+        blockTag: "pending",
+      });
+      const nonce = requireUnusedDeploymentNonce(latest, pending, recovery?.nonce ?? latest);
+      const data = encodeDeployData({ abi, bytecode, args });
+      const gas = await publicClient.estimateGas({ account, data });
+      const gasPrice = await publicClient.getGasPrice();
+      setStatus("Checking the wallet connection. Keep Robinhood Wallet open on your iPhone…");
+      await pingWifWallet();
       // Mark before the wallet call: an ambiguous failure must never permit an automatic resend.
       sent.current = true;
       localStorage.setItem(
         "wifaura-deployment-attempt",
-        JSON.stringify({ account, at: new Date().toISOString() }),
+        JSON.stringify({ account, nonce, at: new Date().toISOString() }),
       );
-      const tx = await wallet.deployContract({ account, abi, bytecode, args });
+      setStatus("Sending the deployment request. Keep Robinhood Wallet open on your iPhone…");
+      // Exactly one wallet request: no fallback RPC method or automatic resend.
+      const result = await provider.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: account,
+            data,
+            chainId: numberToHex(robinhood.id),
+            nonce: numberToHex(nonce),
+            gas: numberToHex(gas + gas / 5n),
+            gasPrice: numberToHex(gasPrice),
+            value: "0x0",
+          },
+        ],
+      });
+      if (typeof result !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(result))
+        throw new Error("Wallet did not return a transaction hash.");
+      const tx = result as `0x${string}`;
       setHash(tx);
+      setStatus("Transaction submitted. Waiting for the deployment receipt…");
       localStorage.setItem("wifaura-deployment-hash", tx);
       const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, timeout: 120000 });
       if (receipt.status !== "success" || !receipt.contractAddress)
         throw new Error("Deployment did not succeed. Check the transaction before retrying.");
       setContract(receipt.contractAddress);
+      setStatus(
+        "Deployment receipt succeeded. Independent contract verification is still required.",
+      );
     } catch (e) {
       setError(
         (e instanceof Error ? e.message : String(e)) +
@@ -173,7 +290,15 @@ function Deployment() {
             </button>
           </>
         )}
-        {busy && <p role="status">Waiting for wallet or network…</p>}
+        {status && <p role="status">{status}</p>}
+        {busy && !status && <p role="status">Waiting for wallet or network…</p>}
+        <button className={button} disabled={busy} onClick={recover}>
+          Recover previous deployment connection
+        </button>
+        <p>
+          Recovery checks the chain and closes the old wallet connection. It never sends a
+          deployment or payment. Use it only after a previous attempt became stuck.
+        </p>
         {error && (
           <p role="alert" className="text-red-400">
             {error}

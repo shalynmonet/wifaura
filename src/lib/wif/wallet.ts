@@ -1,8 +1,37 @@
 import { createWalletClient, custom, erc20Abi, type EIP1193Provider } from "viem";
 import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
 
+async function initWalletConnect() {
+  const projectId = import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"];
+  if (!projectId || !/^[a-fA-F0-9]{32}$/.test(projectId))
+    throw new Error(
+      "Robinhood Wallet connection is being configured. Please try again after setup is complete.",
+    );
+  const { UniversalProvider } = await import("@walletconnect/universal-provider");
+  return UniversalProvider.init({
+    projectId,
+    telemetryEnabled: false,
+    metadata: {
+      name: "WIFAURA",
+      description: "Daily digital collectibles with a 50% Reserve allocation",
+      url: "https://wifaura.sha-i.com",
+      icons: [],
+    },
+  });
+}
+
+export async function disconnectWifSession() {
+  // Restore only; never initiate a pairing or a transaction during recovery.
+  const provider = await initWalletConnect();
+  if (provider.session) await provider.disconnect();
+  selectedProvider = undefined;
+  walletConnectProvider = undefined;
+  activeWalletConnect = undefined;
+}
+
 let selectedProvider: EIP1193Provider | undefined;
 let walletConnectProvider: EIP1193Provider | undefined;
+let activeWalletConnect: Awaited<ReturnType<typeof initWalletConnect>> | undefined;
 let connecting: Promise<EIP1193Provider> | undefined;
 export async function getWifProvider(forceWalletConnect = false): Promise<EIP1193Provider> {
   if (selectedProvider && (!forceWalletConnect || selectedProvider === walletConnectProvider))
@@ -11,25 +40,11 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
   if (injected && !forceWalletConnect) return (selectedProvider = injected);
   if (connecting) return connecting;
   connecting = (async () => {
-    const projectId = import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"];
-    if (!projectId || !/^[a-fA-F0-9]{32}$/.test(projectId))
-      throw new Error(
-        "Robinhood Wallet connection is being configured. Please try again after setup is complete.",
-      );
-    const { UniversalProvider } = await import("@walletconnect/universal-provider");
-    const provider = await UniversalProvider.init({
-      projectId,
-      telemetryEnabled: false,
-      metadata: {
-        name: "WIFAURA",
-        description: "Daily digital collectibles with a 50% Reserve allocation",
-        url: "https://wifaura.sha-i.com",
-        icons: [],
-      },
-    });
+    const provider = await initWalletConnect();
     provider.on("disconnect", () => {
       selectedProvider = undefined;
       walletConnectProvider = undefined;
+      activeWalletConnect = undefined;
     });
     if (!provider.session) {
       const { pairingQr } = await import("./pairing-qr");
@@ -73,12 +88,36 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
     provider.setDefaultChain(`eip155:${robinhood.id}`, robinhood.rpcUrls.default.http[0]);
     selectedProvider = provider as EIP1193Provider;
     walletConnectProvider = selectedProvider;
+    activeWalletConnect = provider;
     return selectedProvider;
   })();
   try {
     return await connecting;
   } finally {
     connecting = undefined;
+  }
+}
+export async function pingWifWallet() {
+  const provider = activeWalletConnect;
+  if (!provider?.session) throw new Error("Reconnect Robinhood Wallet before deployment.");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      provider.client.ping({ topic: provider.session.topic }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Wallet connection is not responding. Keep Robinhood Wallet open, then recover the connection before retrying. No deployment was requested.",
+              ),
+            ),
+          12000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
   }
 }
 async function wallet(forceWalletConnect = false) {
