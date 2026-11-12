@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
-import { fromHex } from "viem";
+import { fromHex, decodeFunctionData } from "viem";
+import { paymentAbi, type WifQuote } from "./config";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 const mock = vi.hoisted(() => ({
@@ -10,6 +11,58 @@ const mock = vi.hoisted(() => ({
   request: vi.fn(),
   disconnect: vi.fn(),
 }));
+const checkout: WifQuote = {
+  id: "quote",
+  intention: "receive",
+  drop_id: "drop",
+  treasury: "0x4444444444444444444444444444444444444444",
+  decimals: 18,
+  status: "quoted",
+  tx_hash: null,
+  manifestation_id: null,
+  sender: "0x1111111111111111111111111111111111111111",
+  reserve: "0x2222222222222222222222222222222222222222",
+  router: "0x3333333333333333333333333333333333333333",
+  quote_key: `0x${"a".repeat(64)}`,
+  amount: "1000",
+  expires_at: "2030-01-01T00:00:00Z",
+};
+it("rejects a different phone payer before asking the wallet to send", async () => {
+  const request = vi.fn(async ({ method }: { method: string }) =>
+    method === "eth_accounts" ? [checkout.reserve] : "0x1237",
+  );
+  vi.stubGlobal("window", { ethereum: { request } });
+  const { payWif } = await import("./wallet");
+  await expect(payWif(checkout)).rejects.toThrow(`This quote requires payer ${checkout.sender}`);
+  expect(request.mock.calls.some(([call]) => call.method === "eth_sendTransaction")).toBe(false);
+});
+it("sends only the quoted payment and never retries a rejected transaction", async () => {
+  let transaction: { to: string; data: `0x${string}` } | undefined;
+  const request = vi.fn(async ({ method, params }: { method: string; params?: unknown[] }) => {
+    if (method === "eth_accounts") return [checkout.sender];
+    if (method === "eth_chainId") return "0x1237";
+    if (method === "eth_sendTransaction") {
+      transaction = params![0] as { to: string; data: `0x${string}` };
+      throw Object.assign(new Error("Rejected"), { code: 4001 });
+    }
+    throw new Error(`Unexpected ${method}`);
+  });
+  vi.stubGlobal("window", { ethereum: { request } });
+  const { payWif } = await import("./wallet");
+  await expect(payWif(checkout)).rejects.toThrow();
+  expect(transaction!.to.toLowerCase()).toBe(checkout.router);
+  const data = decodeFunctionData({ abi: paymentAbi, data: transaction!.data });
+  expect(data.functionName).toBe("pay");
+  expect(data.args).toEqual([
+    checkout.quote_key,
+    checkout.reserve,
+    1000n,
+    BigInt(Date.parse(checkout.expires_at) / 1000),
+  ]);
+  expect(request.mock.calls.filter(([call]) => call.method === "eth_sendTransaction")).toHaveLength(
+    1,
+  );
+});
 vi.mock("@walletconnect/universal-provider", () => ({ UniversalProvider: { init: mock.init } }));
 vi.mock("./pairing-qr", () => ({ pairingQr: vi.fn(() => vi.fn()) }));
 beforeEach(() => {
@@ -110,7 +163,7 @@ it("rejects a restored session that does not authorize Robinhood Chain", async (
     on: mock.on,
   });
   const { getWifProvider } = await import("./wallet");
-  await expect(getWifProvider(true)).rejects.toThrow(/did not authorize Robinhood Chain/);
+  await expect(getWifProvider(true)).rejects.toThrow(/does not include Robinhood Chain/);
   expect(mock.connect).not.toHaveBeenCalled();
 });
 it("recovery closes the old session without pairing or requesting a signature", async () => {

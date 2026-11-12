@@ -158,6 +158,7 @@ function ActiveWifPaymentPanel({
   return (
     <section className="space-y-3 rounded-sm border p-4 [&_button]:w-full [&_button]:whitespace-normal">
       <p className="eyebrow">Unseal with $WIF</p>
+      <a className="block text-xs text-gold underline" href="/wallet-setup">Set up phone network</a>
       {q?.status !== "pending" && (
         <>
           <p className="break-all text-xs">

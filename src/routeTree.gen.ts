@@ -16,6 +16,7 @@ import { Route as CollectiveRouteImport } from './routes/collective'
 import { Route as DeployPaymentRouteImport } from './routes/deploy-payment'
 import { Route as HubReturnRouteImport } from './routes/hub-return'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as WalletSetupRouteImport } from './routes/wallet-setup'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedArtStudyRouteImport } from './routes/_authenticated/art-study'
 import { Route as AuthenticatedEntityStudyRouteImport } from './routes/_authenticated/entity-study'
@@ -56,6 +57,11 @@ const HubReturnRoute = HubReturnRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletSetupRoute = WalletSetupRouteImport.update({
+  id: '/wallet-setup',
+  path: '/wallet-setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/deploy-payment': typeof DeployPaymentRoute
   '/hub-return': typeof HubReturnRoute
   '/privacy': typeof PrivacyRoute
+  '/wallet-setup': typeof WalletSetupRoute
   '/account': typeof AuthenticatedAccountRoute
   '/art-study': typeof AuthenticatedArtStudyRoute
   '/entity-study': typeof AuthenticatedEntityStudyRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/deploy-payment': typeof DeployPaymentRoute
   '/hub-return': typeof HubReturnRoute
   '/privacy': typeof PrivacyRoute
+  '/wallet-setup': typeof WalletSetupRoute
   '/account': typeof AuthenticatedAccountRoute
   '/art-study': typeof AuthenticatedArtStudyRoute
   '/entity-study': typeof AuthenticatedEntityStudyRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/deploy-payment': typeof DeployPaymentRoute
   '/hub-return': typeof HubReturnRoute
   '/privacy': typeof PrivacyRoute
+  '/wallet-setup': typeof WalletSetupRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/art-study': typeof AuthenticatedArtStudyRoute
   '/_authenticated/entity-study': typeof AuthenticatedEntityStudyRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/deploy-payment'
     | '/hub-return'
     | '/privacy'
+    | '/wallet-setup'
     | '/account'
     | '/art-study'
     | '/entity-study'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/deploy-payment'
     | '/hub-return'
     | '/privacy'
+    | '/wallet-setup'
     | '/account'
     | '/art-study'
     | '/entity-study'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/deploy-payment'
     | '/hub-return'
     | '/privacy'
+    | '/wallet-setup'
     | '/_authenticated/account'
     | '/_authenticated/art-study'
     | '/_authenticated/entity-study'
@@ -199,6 +211,7 @@ export interface RootRouteChildren {
   DeployPaymentRoute: typeof DeployPaymentRoute
   HubReturnRoute: typeof HubReturnRoute
   PrivacyRoute: typeof PrivacyRoute
+  WalletSetupRoute: typeof WalletSetupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet-setup': {
+      id: '/wallet-setup'
+      path: '/wallet-setup'
+      fullPath: '/wallet-setup'
+      preLoaderRoute: typeof WalletSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account': {
@@ -335,6 +355,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeployPaymentRoute: DeployPaymentRoute,
   HubReturnRoute: HubReturnRoute,
   PrivacyRoute: PrivacyRoute,
+  WalletSetupRoute: WalletSetupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

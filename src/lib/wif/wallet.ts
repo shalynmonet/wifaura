@@ -109,7 +109,7 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
     const accounts = Object.values(provider.session?.namespaces ?? {}).flatMap((n) => n.accounts);
     if (!accounts.some((account) => account.startsWith(`eip155:${robinhood.id}:`)))
       throw new Error(
-        "Wallet did not authorize Robinhood Chain. Reconnect and approve chain 4663.",
+        "This wallet connection does not include Robinhood Chain. Use Set up phone network, then Change wallet app and reconnect. No transaction was requested.",
       );
     provider.setDefaultChain(`eip155:${robinhood.id}`, robinhood.rpcUrls.default.http[0]);
     selectedProvider = {
