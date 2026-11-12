@@ -8,6 +8,7 @@ const mock = vi.hoisted(() => ({
   on: vi.fn(),
   ping: vi.fn(),
   request: vi.fn(),
+  disconnect: vi.fn(),
 }));
 vi.mock("@walletconnect/universal-provider", () => ({ UniversalProvider: { init: mock.init } }));
 vi.mock("./pairing-qr", () => ({ pairingQr: vi.fn(() => vi.fn()) }));
@@ -22,12 +23,16 @@ beforeEach(() => {
     client: { ping: mock.ping },
     request: mock.request,
     connect: mock.connect,
+    disconnect: mock.disconnect,
     on: mock.on,
     removeListener: vi.fn(),
     setDefaultChain: vi.fn(),
   };
   mock.init.mockResolvedValue(provider);
   mock.ping.mockResolvedValue(undefined);
+  mock.disconnect.mockImplementation(async () => {
+    provider.session = undefined;
+  });
   mock.connect.mockImplementation(async () => {
     provider.session = {
       topic: "test-session",
@@ -112,7 +117,7 @@ it("recovery closes the old session without pairing or requesting a signature", 
   vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
   const disconnect = vi.fn().mockResolvedValue(undefined);
   const request = vi.fn();
-  mock.init.mockResolvedValue({ session: { namespaces: {} }, disconnect, request });
+  mock.init.mockResolvedValue({ session: { namespaces: {} }, disconnect, request, on: mock.on });
   const { disconnectWifSession } = await import("./wallet");
   await disconnectWifSession();
   expect(disconnect).toHaveBeenCalledOnce();
@@ -183,4 +188,24 @@ it("requires a connected wallet when no signing proof exists", async () => {
   await expect(pingWifWallet("0x1111111111111111111111111111111111111111")).rejects.toThrow(
     /Reconnect Robinhood Wallet/,
   );
+});
+it("reuses one SDK client and one disconnect listener across recovery and reconnect", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  const { getWifProvider, disconnectWifSession } = await import("./wallet");
+  await getWifProvider(true);
+  await disconnectWifSession();
+  await getWifProvider(true);
+  expect(mock.init).toHaveBeenCalledOnce();
+  expect(mock.disconnect).toHaveBeenCalledOnce();
+  expect(mock.connect).toHaveBeenCalledTimes(2);
+  expect(mock.on.mock.calls.filter(([event]) => event === "disconnect")).toHaveLength(1);
+});
+it("allows a fresh initialization after an SDK startup failure", async () => {
+  vi.stubEnv("VITE_WALLETCONNECT_PROJECT_ID", "a".repeat(32));
+  mock.init.mockRejectedValueOnce(new Error("Startup failed"));
+  const { getWifProvider } = await import("./wallet");
+  await expect(getWifProvider(true)).rejects.toThrow("Startup failed");
+  await getWifProvider(true);
+  expect(mock.init).toHaveBeenCalledTimes(2);
+  expect(mock.connect).toHaveBeenCalledOnce();
 });

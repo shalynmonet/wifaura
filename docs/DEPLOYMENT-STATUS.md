@@ -32,6 +32,16 @@ the ping check. Thirteen targeted tests cover recovery and signing validation,
 including wrong-signer rejection and proof expiry. The phone signing test
 still needs to be exercised by the owner.
 
+The owner confirmed the connectivity message reached Robinhood Wallet and
+was accepted, but the browser timed out without a signature response. A
+concrete lifecycle defect was found: recovery could initialize an additional
+SDK client for the same persisted session. Initialization is now single-instance
+per page and retained across disconnect/reconnect, with a single disconnect
+listener. Fifteen targeted tests and type checks passed, including recovery
+client reuse and retry after initialization failure. The defect is a plausible
+cause, not a proven diagnosis of the missing response. A fresh single-tab
+phone/browser signing test is still required.
+
 The owner-approved privacy policy is available at `/privacy`, linked from the
 shared application footer. Google Branding should use the primary homepage
 and `https://wifaura.sha-i.com/privacy`; Google production publishing remains

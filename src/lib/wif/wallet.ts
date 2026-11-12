@@ -8,14 +8,14 @@ import {
 } from "viem";
 import { paymentAbi, robinhood, WIF_TOKEN, type WifQuote } from "./config";
 
-async function initWalletConnect() {
+async function createWalletConnect() {
   const projectId = import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"];
   if (!projectId || !/^[a-fA-F0-9]{32}$/.test(projectId))
     throw new Error(
       "Robinhood Wallet connection is being configured. Please try again after setup is complete.",
     );
   const { UniversalProvider } = await import("@walletconnect/universal-provider");
-  return UniversalProvider.init({
+  const provider = await UniversalProvider.init({
     projectId,
     telemetryEnabled: false,
     metadata: {
@@ -25,6 +25,27 @@ async function initWalletConnect() {
       icons: [],
     },
   });
+  provider.on("disconnect", () => {
+    selectedProvider = undefined;
+    walletConnectProvider = undefined;
+    activeWalletConnect = undefined;
+    signingProof = undefined;
+  });
+  return provider;
+}
+
+// Recovery and reconnect must share one SignClient and its response listeners.
+// Creating another client against the same persistent session can compete for
+// incoming messages/history. Retain the initialized SDK even after disconnect.
+let providerInitialization: ReturnType<typeof createWalletConnect> | undefined;
+function initWalletConnect() {
+  if (!providerInitialization) {
+    providerInitialization = createWalletConnect().catch((error) => {
+      providerInitialization = undefined;
+      throw error;
+    });
+  }
+  return providerInitialization;
 }
 
 export async function disconnectWifSession() {
@@ -50,12 +71,6 @@ export async function getWifProvider(forceWalletConnect = false): Promise<EIP119
   if (connecting) return connecting;
   connecting = (async () => {
     const provider = await initWalletConnect();
-    provider.on("disconnect", () => {
-      selectedProvider = undefined;
-      walletConnectProvider = undefined;
-      activeWalletConnect = undefined;
-      signingProof = undefined;
-    });
     if (!provider.session) {
       const { pairingQr } = await import("./pairing-qr");
       let closeQr: (() => void) | undefined;

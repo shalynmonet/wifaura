@@ -39,6 +39,11 @@ It uses the same pinned compiler output as the local contract tests. The
    signing response can replace the ping check; a stale or mismatched response
    cannot. No transaction is requested by the test. A missing response times
    out after 60 seconds without unlocking a deployment automatically.
+   The SDK initialization promise is shared across recovery/reconnect within
+   the page; only one SignClient and disconnect listener are created. Do not
+   initialize additional SDK clients against the same stored session. Close
+   other WIFAURA wallet tabs while diagnosing responses, then hard-refresh
+   one setup tab, recover, and pair a fresh session.
 5. Give the public transaction hash and contract address to the setup process.
    A successful receipt alone does not enable payments. Run the independent
    deployment source/getter/code-hash checks, verify explorer source, configure
