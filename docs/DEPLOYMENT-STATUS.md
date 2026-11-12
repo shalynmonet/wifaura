@@ -6,8 +6,7 @@ WIFAURA is live at https://wifaura.sha-i.com on Cloudflare Pages. Public source:
 https://github.com/shalynmonet/wifaura. Google sign-in works, confirmed by the
 owner. Its separate SHA-I backend is bvnjosopyjblugshdbwd. The protected server
 key is configured as an encrypted Pages Production secret; its value has not
-been retrieved or placed in source. Wallet linking is open. Both paid-checkout
-flags remain false. Latest wallet-setup deployment: bed88e93.
+been retrieved or placed in source. Wallet linking is open. Checkout is restricted on the server to the verified launch-test payer ending 418f. Public checkout remains closed pending acceptance testing.
 
 Squarespace retains its original nameservers; only the wifaura CNAME points
 to Pages. NIMAURA's repository and backend remain unchanged. The earlier
@@ -38,17 +37,17 @@ checked before any call. See CONTRACT-SETUP.md for deployment and recovery.
 
 ## Remaining acceptance work
 
-The owner needs a payer and separate Reserve EOA, both different from treasury.
-Two standard Ethereum accounts in a new MetaMask wallet are the planned test
-setup. The owner creates and backs them up; the app verifies ownership through
-signatures. No private key or recovery phrase is requested by the agent.
+The owner created and verified separate payer and Reserve accounts. The payer
+holds approximately 1,039.82 WIF and 0.000322 ETH after funding and swapping.
+The launch restriction checks the verified payer at quote creation and before
+payment preparation. Existing payment checks remain available for recovery.
+Collectors can choose WIF without consuming a complimentary credit.
 
-Verify the wallet links and backend access, review funding
-and WIF acquisition, then approve one real $1-equivalent WIF checkout. Check
-finalized payment evidence, both equal transfers, exactly one artifact,
-Reserve delivery and independent Collective progress. Repeating verification
-must not change totals or resend payment. No real WIF checkout has passed yet.
-
+Next: the owner reviews one $1-equivalent WIF quote, exact token approval and
+payment in their wallet. Verify finalized payment evidence, both equal
+transfers, exactly one artifact, Reserve delivery and independent Collective
+progress. Repeating verification must not change totals or resend payment.
+No real WIFAURA checkout has passed yet; the successful swap is acquisition.
 ## Validation and submission
 
 Fifteen targeted wallet/recovery tests, the disposable-EVM factory test,
@@ -60,3 +59,5 @@ Entry is free; ETH funding was for deployment gas. Submissions close November
 12, 2026 at 17:30 UTC (11:30 a.m. Chicago); the final closes November 16 at the
 same time. A demo video and actual WIF payment evidence remain outstanding.
 No hackathon submission has been made.
+
+

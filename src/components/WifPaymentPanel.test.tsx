@@ -34,18 +34,42 @@ const q = {
   manifestation_id: null,
 };
 beforeEach(() => {
-  vi.stubEnv('VITE_WIFAURA_PAYMENTS_ENABLED', 'true');
+  vi.stubEnv("VITE_WIFAURA_PAYMENTS_ENABLED", "true");
+  vi.stubEnv("VITE_WIFAURA_TEST_PAYER", "");
   vi.resetAllMocks();
   m.account.mockResolvedValue({ quotes: [q], links: [] });
   m.prepare.mockResolvedValue({ ...q, status: "pending" });
   m.pay.mockResolvedValue("0x" + "b".repeat(64));
 });
-afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
-it('does not open a wallet or request payment state while paid checkout is disabled', () => {
-  vi.stubEnv('VITE_WIFAURA_PAYMENTS_ENABLED', 'false');
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+});
+it("does not open a wallet or request payment state while paid checkout is disabled", () => {
+  vi.stubEnv("VITE_WIFAURA_PAYMENTS_ENABLED", "false");
   render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
   expect(screen.getByText(/Paid unsealings are not open yet/)).toBeTruthy();
   expect(m.account).not.toHaveBeenCalled();
+  expect(m.pay).not.toHaveBeenCalled();
+});
+it("blocks new quotes for wallets outside the launch test", async () => {
+  vi.stubEnv("VITE_WIFAURA_TEST_PAYER", q.sender);
+  m.account.mockResolvedValue({ quotes: [], links: [] });
+  render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
+  await screen.findByText(/limited to the launch-test wallet/);
+  expect(screen.getByText("Get WIF quote")).toBeDisabled();
+  expect(m.quote).not.toHaveBeenCalled();
+  expect(m.pay).not.toHaveBeenCalled();
+});
+it("allows a verified launch payer to request a quote", async () => {
+  vi.stubEnv("VITE_WIFAURA_TEST_PAYER", q.sender);
+  m.account.mockResolvedValue({ quotes: [], links: [{ purpose: "payer", address: q.sender }] });
+  m.quote.mockResolvedValue(q);
+  render(<WifPaymentPanel dropId="drop" intention="become" onFulfilled={() => {}} />);
+  const button = screen.getByText("Get WIF quote");
+  await waitFor(() => expect(button).not.toBeDisabled());
+  fireEvent.click(button);
+  await waitFor(() => expect(m.quote).toHaveBeenCalledTimes(1));
   expect(m.pay).not.toHaveBeenCalled();
 });
 it("opens only one wallet payment when clicked twice", async () => {

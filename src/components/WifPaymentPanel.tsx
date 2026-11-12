@@ -12,6 +12,7 @@ import {
 import { approveWif, payWif } from "@/lib/wif/wallet";
 import { type WifQuote } from "@/lib/wif/config";
 import type { Intention } from "@/lib/manifest";
+import { paymentTestAccess } from "@/lib/wif/test-access";
 
 export function WifPaymentPanel(props: {
   dropId: string;
@@ -50,11 +51,18 @@ function ActiveWifPaymentPanel({
     [message, setMessage] = useState(""),
     [hash, setHash] = useState("");
   const lock = useRef(false);
+  const [eligible, setEligible] = useState(!import.meta.env["VITE_WIFAURA_TEST_PAYER"]);
   useEffect(() => {
     let active = true;
     account()
       .then((a) => {
         if (active) {
+          setEligible(
+            paymentTestAccess(
+              import.meta.env["VITE_WIFAURA_TEST_PAYER"],
+              a.links.find((link) => link.purpose === "payer")?.address,
+            ),
+          );
           setQ(
             a.quotes.find(
               (x) =>
@@ -97,9 +105,15 @@ function ActiveWifPaymentPanel({
   return (
     <section className="space-y-3 rounded-sm border p-4">
       <p className="eyebrow">Unseal with $WIF</p>
+      {!eligible && !q && (
+        <p className="text-sm text-muted-foreground">
+          Paid checkout is currently limited to the launch-test wallet. Complimentary unsealings
+          remain available.
+        </p>
+      )}
       {!q ? (
         <Button
-          disabled={!ready || !intention || busy}
+          disabled={!ready || !eligible || !intention || busy}
           onClick={() =>
             run(async () => {
               if (intention) {

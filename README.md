@@ -4,15 +4,14 @@ A separate Robinhood Chain edition of NIMAURA: daily generative art, verified
 WIF checkout, an atomic 50% Reserve transfer and independent Collective Seal
 progression. Based on NIMAURA commit `02da3cd5446ca54fabdad6890800b456ff52fb6a`.
 
-**Public complimentary release:** https://wifaura.wifaura.workers.dev
+**Live app:** https://wifaura.sha-i.com
 
 Primary domain: `https://wifaura.sha-i.com`, hosted on
 Cloudflare Pages at `https://wifaura.pages.dev`. Squarespace retains DNS.
 See [the single-record DNS setup](docs/CUSTOM-DOMAIN.md).
 
 The payment contract is deployed and source-verified; its runtime hash and
-protected server key are configured. Wallet setup is open. Paid checkout
-remains off pending real-payment acceptance testing; deployment is finalized.
+protected server key are configured. Wallet setup is open. Paid checkout is restricted to the verified launch-test payer pending real-payment acceptance testing; deployment is finalized.
 WIFAURA uses a separate backend and deployment; never connect
 it to the original NIMAURA project.
 
@@ -38,3 +37,4 @@ Configure a separate backend using `.env.example` before running `npm run dev`.
 No remote creation, deployment, real transaction or submission is authorized by
 running local tests. Obtain the owner's approval for each external change.
 The original MIT attribution is retained in `LICENSE`.
+

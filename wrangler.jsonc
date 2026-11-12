@@ -7,7 +7,8 @@
   "vars": {
     "SUPABASE_URL": "https://bvnjosopyjblugshdbwd.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_BS4YS2kw6x_ebMJe755wjg_iXY6JCZD",
-    "WIFAURA_PAYMENTS_ENABLED": "false",
+    "WIFAURA_PAYMENTS_ENABLED": "true",
+    "WIFAURA_TEST_PAYER": "0xb6B05f072A361d149095f03FA904B544d7d1418f",
     "WIFAURA_PAYMENT_CONTRACT": "0x2d889Ff462B21177A4C2E6384D258eC867222D69",
     "WIFAURA_ROUTER_CODE_HASH": "0x4bdfd605b0c3ba7414344ccdb5290cde5e0862eb570ace6e43edd5f7821419b4",
     "WIFAURA_ORIGIN": "https://wifaura.sha-i.com",

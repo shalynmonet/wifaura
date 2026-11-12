@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { isAddress, getAddress, verifyMessage } from "viem";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { paymentTestAccess } from "./test-access";
 import { newManifestationSnapshot, newSeed, INTENTIONS } from "@/lib/manifest";
 import type { WifQuote } from "./config";
 
@@ -88,10 +89,22 @@ export const quoteWif = createServerFn({ method: "POST" })
     const { paymentConfiguration } = await import("./rpc.server");
     const { wifStore } = await import("./store.server");
     const { liveDollarWifQuote } = await import("./price.server");
+    const db = wifStore();
+    const allowed = process.env["WIFAURA_TEST_PAYER"];
+    if (allowed) {
+      const { data: payer, error } = await db
+        .from("wif_wallet_links")
+        .select("address")
+        .eq("user_id", context.userId)
+        .eq("purpose", "payer")
+        .single();
+      if (error || !paymentTestAccess(allowed, payer?.address))
+        throw new Error("Paid checkout is currently limited to the verified launch-test wallet.");
+    }
     const cfg = await paymentConfiguration();
     const pricing = await liveDollarWifQuote(cfg.decimals);
     const seed = newSeed();
-    const result = await wifStore().rpc("wif_create_quote", {
+    const result = await db.rpc("wif_create_quote", {
       _user: context.userId,
       _drop: data.dropId,
       _intention: data.intention,
@@ -108,6 +121,8 @@ export const quoteWif = createServerFn({ method: "POST" })
       _start_block: (await cfg.client.getBlockNumber()).toString(),
     });
     if (result.error) throw new Error(result.error.message);
+    if (!paymentTestAccess(allowed, (result.data as WifQuote).sender))
+      throw new Error("Launch-test wallet changed. Reconnect the authorized payer.");
     return result.data as WifQuote;
   });
 export const prepareWif = createServerFn({ method: "POST" })
@@ -126,6 +141,8 @@ export const prepareWif = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .single();
     if (!q || q.status !== "quoted") throw new Error("Quote unavailable. Check existing payment.");
+    if (!paymentTestAccess(process.env["WIFAURA_TEST_PAYER"], q.sender))
+      throw new Error("Paid checkout is currently limited to the verified launch-test wallet.");
     const cfg = await paymentConfiguration();
     if (
       q.router.toLowerCase() !== cfg.router.toLowerCase() ||
